@@ -52,7 +52,11 @@ const newQty=quantity-1
       <div className="flex-1 flex flex-col p-4">
 <h1 className='font-semibold text-gray-900 text-base truncate'>{data.name}</h1>
 
-<p className='text-xs text-gray-500 truncate'>{data.expiry}</p>
+<p className='text-xs text-gray-500 truncate'>
+    {data.foodType=="veg"?"(Veg)":"(Non-Veg)"}
+    <br/>
+    Expires at {data.expiry}
+</p>
 
 <div className='flex items-center gap-1 mt-1'>
 {renderStars(data.rating?.average || 0)}
