@@ -1,5 +1,5 @@
 import React from 'react'
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { FaRegEye } from "react-icons/fa";
 import { FaRegEyeSlash } from "react-icons/fa";
 import { FcGoogle } from "react-icons/fc";
@@ -12,12 +12,13 @@ import { ClipLoader } from "react-spinners"
 import { useDispatch } from 'react-redux';
 import { setUserData } from '../redux/userSlice';
 function SignUp() {
-    const primaryColor = "#ff4d2d";
-    const hoverColor = "#e64323";
-    const bgColor = "#fff9f6";
-    const borderColor = "#ddd";
+    const primaryColor = "#0A400C";
+    const hoverColor = "#819067";
+    const bgColor = "#FEFAE0";
+    const borderColor = "#B1AB86";
     const [showPassword, setShowPassword] = useState(false)
     const [role, setRole] = useState("user")
+    const [city, setCity] = useState("")
     const navigate=useNavigate()
     const [fullName,setFullName]=useState("")
     const [email,setEmail]=useState("")
@@ -25,12 +26,33 @@ function SignUp() {
     const [mobile,setMobile]=useState("")
     const [err,setErr]=useState("")
     const [loading,setLoading]=useState(false)
+
+    useEffect(() => {
+        if (navigator.geolocation) {
+            navigator.geolocation.getCurrentPosition(
+                async (position) => {
+                    const latitude = position.coords.latitude
+                    const longitude = position.coords.longitude
+                    const apiKey = import.meta.env.VITE_GEOAPIKEY
+                    try {
+                        const result = await axios.get(`https://api.geoapify.com/v1/geocode/reverse?lat=${latitude}&lon=${longitude}&format=json&apiKey=${apiKey}`)
+                        setCity(result?.data?.results[0]?.city || "")
+                    } catch (error) {
+                        console.error("Geolocation error:", error)
+                    }
+                },
+                (error) => {
+                    console.error("Geolocation denied:", error)
+                }
+            )
+        }
+    }, [])
     const dispatch=useDispatch()
      const handleSignUp=async () => {
         setLoading(true)
         try {
             const result=await axios.post(`${serverUrl}/api/auth/signup`,{
-                fullName,email,password,mobile,role
+                fullName,email,password,mobile,role,city
             },{withCredentials:true})
             dispatch(setUserData(result.data))
             setErr("")
@@ -45,6 +67,9 @@ function SignUp() {
         if(!mobile){
           return setErr("mobile no is required")
         }
+        if(!city){
+          return setErr("city is required")
+        }
         const provider=new GoogleAuthProvider()
         const result=await signInWithPopup(auth,provider)
   try {
@@ -52,7 +77,8 @@ function SignUp() {
         fullName:result.user.displayName,
         email:result.user.email,
         role,
-        mobile
+        mobile,
+        city
     },{withCredentials:true})
    dispatch(setUserData(data))
   } catch (error) {
@@ -86,6 +112,11 @@ function SignUp() {
                     <label htmlFor="mobile" className='block text-gray-700 font-medium mb-1'>Mobile</label>
                     <input type="email" className='w-full border rounded-lg px-3 py-2 focus:outline-none ' placeholder='Enter your Mobile Number' style={{ border: `1px solid ${borderColor}` }} onChange={(e)=>setMobile(e.target.value)} value={mobile} required/>
                 </div>
+
+                <div className='mb-4'>
+                    <label htmlFor="city" className='block text-gray-700 font-medium mb-1'>City</label>
+                    <input type="text" className='w-full border rounded-lg px-3 py-2 focus:outline-none ' placeholder='Enter your City' style={{ border: `1px solid ${borderColor}` }} onChange={(e)=>setCity(e.target.value)} value={city} required/>
+                </div>
                 {/* password*/}
 
                 <div className='mb-4'>
@@ -116,7 +147,7 @@ function SignUp() {
                     </div>
                 </div>
 
-            <button className={`w-full font-semibold py-2 rounded-lg transition duration-200 bg-[#ff4d2d] text-white hover:bg-[#e64323] cursor-pointer`} onClick={handleSignUp} disabled={loading}>
+            <button className={`w-full font-semibold py-2 rounded-lg transition duration-200 bg-[#0A400C] text-white hover:bg-[#819067] cursor-pointer`} onClick={handleSignUp} disabled={loading}>
                 {loading?<ClipLoader size={20} color='white'/>:"Sign Up"}
             
             </button>
@@ -127,7 +158,7 @@ function SignUp() {
 <FcGoogle size={20}/>
 <span>Sign up with Google</span>
             </button>
-            <p className='text-center mt-6 cursor-pointer' onClick={()=>navigate("/signin")}>Already have an account ?  <span className='text-[#ff4d2d]'>Sign In</span></p>
+            <p className='text-center mt-6 cursor-pointer' onClick={()=>navigate("/signin")}>Already have an account ?  <span className='text-[#0A400C]'>Sign In</span></p>
             </div>
         </div>
     )

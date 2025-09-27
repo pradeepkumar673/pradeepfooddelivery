@@ -139,16 +139,16 @@ getCurrentOrder()
 handleTodayDeliveries()
   },[userData])
   return (
-    <div className='w-screen min-h-screen flex flex-col gap-5 items-center bg-[#fff9f6] overflow-y-auto'>
+    <div className='w-screen min-h-screen flex flex-col gap-5 items-center bg-[#FEFAE0] overflow-y-auto'>
       <Nav/>
       <div className='w-full max-w-[800px] flex flex-col gap-5 items-center'>
-    <div className='bg-white rounded-2xl shadow-md p-5 flex flex-col justify-start items-center w-[90%] border border-orange-100 text-center gap-2'>
-<h1 className='text-xl font-bold text-[#ff4d2d]'>Welcome, {userData.fullName}</h1>
-<p className='text-[#ff4d2d] '><span className='font-semibold'>Latitude:</span> {deliveryBoyLocation?.lat}, <span className='font-semibold'>Longitude:</span> {deliveryBoyLocation?.lon}</p>
+    <div className='bg-white rounded-2xl shadow-md p-5 flex flex-col justify-start items-center w-[90%] border border-[#B1AB86] text-center gap-2'>
+<h1 className='text-xl font-bold text-[#0A400C]'>Welcome, {userData.fullName}</h1>
+<p className='text-[#0A400C] '><span className='font-semibold'>Latitude:</span> {deliveryBoyLocation?.lat}, <span className='font-semibold'>Longitude:</span> {deliveryBoyLocation?.lon}</p>
     </div>
 
-<div className='bg-white rounded-2xl shadow-md p-5 w-[90%] mb-6 border border-orange-100'>
-  <h1 className='text-lg font-bold mb-3 text-[#ff4d2d] '>Today Deliveries</h1>
+<div className='bg-white rounded-2xl shadow-md p-5 w-[90%] mb-6 border border-[#B1AB86]'>
+  <h1 className='text-lg font-bold mb-3 text-[#0A400C] '>Today Deliveries</h1>
 
   <ResponsiveContainer width="100%" height={200}>
    <BarChart data={todayDeliveries}>
@@ -156,7 +156,7 @@ handleTodayDeliveries()
   <XAxis dataKey="hour" tickFormatter={(h)=>`${h}:00`}/>
     <YAxis  allowDecimals={false}/>
     <Tooltip formatter={(value)=>[value,"orders"]} labelFormatter={label=>`${label}:00`}/>
-      <Bar dataKey="count" fill='#ff4d2d'/>
+      <Bar dataKey="count" fill='#0A400C'/>
    </BarChart>
   </ResponsiveContainer>
 
@@ -181,7 +181,7 @@ availableAssignments.map((a,index)=>(
     <p className='text-sm text-gray-500'><span className='font-semibold'>Delivery Address:</span> {a?.deliveryAddress.text}</p>
 <p className='text-xs text-gray-400'>{a.items.length} items | {a.subtotal}</p>
    </div>
-   <button className='bg-orange-500 text-white px-4 py-1 rounded-lg text-sm hover:bg-orange-600' onClick={()=>acceptOrder(a.assignmentId)}>Accept</button>
+   <button className='bg-[#0A400C] text-white px-4 py-1 rounded-lg text-sm hover:bg-[#819067]' onClick={()=>acceptOrder(a.assignmentId)}>Accept</button>
 
   </div>
 ))
@@ -213,7 +213,7 @@ availableAssignments.map((a,index)=>(
 <input type="text" className='w-full border px-3 py-2 rounded-lg mb-3 focus:outline-none focus:ring-2 focus:ring-orange-400' placeholder='Enter OTP' onChange={(e)=>setOtp(e.target.value)} value={otp}/>
 {message && <p className='text-center text-green-400 text-2xl mb-4'>{message}</p>}
 
-<button className="w-full bg-orange-500 text-white py-2 rounded-lg font-semibold hover:bg-orange-600 transition-all" onClick={verifyOtp}>Submit OTP</button>
+<button className="w-full bg-[#0A400C] text-white py-2 rounded-lg font-semibold hover:bg-[#819067] transition-all" onClick={verifyOtp}>Submit OTP</button>
   </div>}
 
   </div>}

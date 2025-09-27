@@ -12,10 +12,10 @@ import { ClipLoader } from 'react-spinners';
 import { useDispatch } from 'react-redux';
 import { setUserData } from '../redux/userSlice';
 function SignIn() {
-    const primaryColor = "#ff4d2d";
-    const hoverColor = "#e64323";
-    const bgColor = "#fff9f6";
-    const borderColor = "#ddd";
+    const primaryColor = "#0A400C";
+    const hoverColor = "#819067";
+    const bgColor = "#FEFAE0";
+    const borderColor = "#B1AB86";
     const [showPassword, setShowPassword] = useState(false)
     const navigate=useNavigate()
     const [email,setEmail]=useState("")
@@ -75,12 +75,12 @@ function SignIn() {
                         <button className='absolute right-3 cursor-pointer top-[14px] text-gray-500' onClick={() => setShowPassword(prev => !prev)}>{!showPassword ? <FaRegEye /> : <FaRegEyeSlash />}</button>
                     </div>
                 </div>
-                <div className='text-right mb-4 cursor-pointer text-[#ff4d2d] font-medium' onClick={()=>navigate("/forgot-password")}>
+                <div className='text-right mb-4 cursor-pointer text-[#0A400C] font-medium' onClick={()=>navigate("/forgot-password")}>
                   Forgot Password
                 </div>
               
 
-            <button className={`w-full font-semibold py-2 rounded-lg transition duration-200 bg-[#ff4d2d] text-white hover:bg-[#e64323] cursor-pointer`} onClick={handleSignIn} disabled={loading}>
+            <button className={`w-full font-semibold py-2 rounded-lg transition duration-200 bg-[${primaryColor}] text-white hover:bg-[${hoverColor}] cursor-pointer`} onClick={handleSignIn} disabled={loading}>
                 {loading?<ClipLoader size={20} color='white'/>:"Sign In"}
             </button>
       {err && <p className='text-red-500 text-center my-[10px]'>*{err}</p>}
@@ -89,7 +89,7 @@ function SignIn() {
 <FcGoogle size={20}/>
 <span>Sign In with Google</span>
             </button>
-            <p className='text-center mt-6 cursor-pointer' onClick={()=>navigate("/signup")}>Want to create a new account ?  <span className='text-[#ff4d2d]'>Sign Up</span></p>
+            <p className='text-center mt-6 cursor-pointer' onClick={()=>navigate("/signup")}>Want to create a new account ?  <span className='text-[#0A400C]'>Sign Up</span></p>
             </div>
         </div>
     )

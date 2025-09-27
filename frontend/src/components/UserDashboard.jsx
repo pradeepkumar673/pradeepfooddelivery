@@ -194,7 +194,7 @@ function UserDashboard() {
   }, [categories])
 
   return (
-    <div className='w-screen min-h-screen flex flex-col gap-5 items-center bg-[#fff9f6] overflow-y-auto'>
+    <div className='w-screen min-h-screen flex flex-col gap-5 items-center bg-[#FEFAE0] overflow-y-auto'>
       <Nav />
       
       {/* Location Header - Interactive Icon */}
@@ -203,8 +203,8 @@ function UserDashboard() {
         
         <div className="flex items-center gap-3">
           {isEditingLocation ? (
-            <div className="flex items-center gap-2 bg-white border border-[#ff4d2d] rounded-full px-4 py-2 shadow-md">
-              <FaMapMarkerAlt className="text-[#ff4d2d]" />
+            <div className="flex items-center gap-2 bg-white border border-[#B1AB86] rounded-full px-4 py-2 shadow-md">
+              <FaMapMarkerAlt className="text-[#0A400C]" />
               <input
                 type="text"
                 value={tempLocation}
@@ -235,7 +235,7 @@ function UserDashboard() {
               className="flex items-center gap-2 bg-white text-gray-700 px-4 py-2 rounded-full shadow-md hover:shadow-lg transition-shadow group"
             >
               <div className="relative">
-                <FaMapMarkerAlt className="text-[#ff4d2d] group-hover:scale-110 transition-transform" />
+                <FaMapMarkerAlt className="text-[#0A400C] group-hover:scale-110 transition-transform" />
                 <FaEdit className="absolute -top-1 -right-1 text-xs text-blue-500 opacity-0 group-hover:opacity-100 transition-opacity" />
               </div>
               <span className="font-medium">{currentCity || 'Set Location'}</span>
@@ -252,7 +252,7 @@ function UserDashboard() {
         <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
           <div className="bg-white rounded-2xl p-6 max-w-md w-full mx-4">
             <div className="flex items-center gap-3 mb-4">
-              <FaMapMarkerAlt className="text-[#ff4d2d] text-2xl" />
+              <FaMapMarkerAlt className="text-[#0A400C] text-2xl" />
               <h2 className="text-2xl font-bold">Set Your Location</h2>
             </div>
             
@@ -277,7 +277,7 @@ function UserDashboard() {
               <button
                 type="submit"
                 disabled={!locationInput.trim() || isLoading}
-                className="w-full bg-[#ff4d2d] text-white p-3 rounded-lg hover:bg-[#e64528] disabled:bg-gray-300 transition-colors"
+                className="w-full bg-[#0A400C] text-white p-3 rounded-lg hover:bg-[#819067] disabled:bg-gray-300 transition-colors"
               >
                 {isLoading ? 'Setting Location...' : 'Set Location'}
               </button>
@@ -325,7 +325,7 @@ function UserDashboard() {
           <div className="w-full max-w-6xl flex flex-col gap-5 items-start p-[10px]">
             <h1 className='text-gray-800 text-2xl sm:text-3xl'>Inspiration for your first order</h1>
             <div className='w-full relative'>
-              {showLeftCateButton && <button className='absolute left-0 top-1/2 -translate-y-1/2 bg-[#ff4d2d] text-white p-2 rounded-full shadow-lg hover:bg-[#e64528] z-10' onClick={() => scrollHandler(cateScrollRef, "left")}><FaCircleChevronLeft />
+              {showLeftCateButton && <button className='absolute left-0 top-1/2 -translate-y-1/2 bg-[#0A400C] text-white p-2 rounded-full shadow-lg hover:bg-[#819067] z-10' onClick={() => scrollHandler(cateScrollRef, "left")}><FaCircleChevronLeft />
               </button>}
 
               <div className='w-full flex overflow-x-auto gap-4 pb-2 ' ref={cateScrollRef}>
@@ -333,7 +333,7 @@ function UserDashboard() {
                   <CategoryCard name={cate.category} image={cate.image} key={index} onClick={() => handleFilterByCategory(cate.category)} />
                 ))}
               </div>
-              {showRightCateButton && <button className='absolute right-0 top-1/2 -translate-y-1/2 bg-[#ff4d2d] text-white p-2 rounded-full shadow-lg hover:bg-[#e64528] z-10' onClick={() => scrollHandler(cateScrollRef, "right")}>
+              {showRightCateButton && <button className='absolute right-0 top-1/2 -translate-y-1/2 bg-[#0A400C] text-white p-2 rounded-full shadow-lg hover:bg-[#819067] z-10' onClick={() => scrollHandler(cateScrollRef, "right")}>
                 <FaCircleChevronRight />
               </button>}
             </div>
@@ -342,7 +342,7 @@ function UserDashboard() {
           <div className='w-full max-w-6xl flex flex-col gap-5 items-start p-[10px]'>
             <h1 className='text-gray-800 text-2xl sm:text-3xl'>Best Shop in {currentCity}</h1>
             <div className='w-full relative'>
-              {showLeftShopButton && <button className='absolute left-0 top-1/2 -translate-y-1/2 bg-[#ff4d2d] text-white p-2 rounded-full shadow-lg hover:bg-[#e64528] z-10' onClick={() => scrollHandler(shopScrollRef, "left")}><FaCircleChevronLeft />
+              {showLeftShopButton && <button className='absolute left-0 top-1/2 -translate-y-1/2 bg-[#0A400C] text-white p-2 rounded-full shadow-lg hover:bg-[#819067] z-10' onClick={() => scrollHandler(shopScrollRef, "left")}><FaCircleChevronLeft />
               </button>}
 
               <div className='w-full flex overflow-x-auto gap-4 pb-2 ' ref={shopScrollRef}>
@@ -350,7 +350,7 @@ function UserDashboard() {
                   <CategoryCard name={shop.name} image={shop.image} key={index} onClick={() => navigate(`/shop/${shop._id}`)} />
                 ))}
               </div>
-              {showRightShopButton && <button className='absolute right-0 top-1/2 -translate-y-1/2 bg-[#ff4d2d] text-white p-2 rounded-full shadow-lg hover:bg-[#e64528] z-10' onClick={() => scrollHandler(shopScrollRef, "right")}>
+              {showRightShopButton && <button className='absolute right-0 top-1/2 -translate-y-1/2 bg-[#0A400C] text-white p-2 rounded-full shadow-lg hover:bg-[#819067] z-10' onClick={() => scrollHandler(shopScrollRef, "right")}>
                 <FaCircleChevronRight />
               </button>}
             </div>
