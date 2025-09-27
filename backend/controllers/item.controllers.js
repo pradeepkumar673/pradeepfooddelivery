@@ -1,10 +1,33 @@
 import Item from "../models/item.model.js";
 import Shop from "../models/shop.model.js";
+import User from "../models/user.model.js";
+import { sendFoodAvailableNotification, sendFoodAvailableNotificationToAll } from "../utils/mail.js";
 import uploadOnCloudinary from "../utils/cloudinary.js";
+
+export const notifyUsers = async (req, res) => {
+  try {
+    const shop = await Shop.findOne({ owner: req.userId });
+    if (!shop) {
+      return res.status(400).json({ message: "Shop not found" });
+    }
+
+    const result = await sendFoodAvailableNotificationToAll(shop.name);
+
+    return res.status(200).json({
+      message: "Notification sent successfully to all users",
+      totalUsers: result.total,
+      sentCount: result.sentEmails.length,
+      sentEmails: result.sentEmails
+    });
+  } catch (error) {
+    return res.status(500).json({ message: `Notification error: ${error.message}` });
+  }
+};
 
 export const addItem = async (req, res) => {
     try {
-        const { name, category, foodType, price, expiry } = req.body
+        const { name, category, foodType, price, expiry, notify } = req.body
+        console.log('AddItem notify flag:', notify);
         let image;
         if (req.file) {
             image = await uploadOnCloudinary(req.file.path)
@@ -13,12 +36,18 @@ export const addItem = async (req, res) => {
         if (!shop) {
             return res.status(400).json({ message: "shop not found" })
         }
+        console.log('Shop city:', shop.city);
         const item = await Item.create({
             name, category, foodType, price, expiry, image, shop: shop._id
         })
 
         shop.items.push(item._id)
         await shop.save()
+
+        if (req.body.notify === 'true') {
+            await sendFoodAvailableNotification(shop.name, shop.city);
+        }
+
         await shop.populate("owner")
         await shop.populate({
             path: "items",

@@ -4,7 +4,7 @@ import genToken from "../utils/token.js"
 import { sendOtpMail } from "../utils/mail.js"
 export const signUp=async (req,res) => {
     try {
-        const {fullName,email,password,mobile,role}=req.body
+        const {fullName,email,password,mobile,role,city}=req.body
         let user=await User.findOne({email})
         if(user){
             return res.status(400).json({message:"User Already exist."})
@@ -22,6 +22,7 @@ export const signUp=async (req,res) => {
             email,
             role,
             mobile,
+            city,
             password:hashedPassword
         })
 
@@ -132,11 +133,11 @@ export const resetPassword=async (req,res) => {
 
 export const googleAuth=async (req,res) => {
     try {
-        const {fullName,email,mobile,role}=req.body
+        const {fullName,email,mobile,role,city}=req.body
         let user=await User.findOne({email})
         if(!user){
             user=await User.create({
-                fullName,email,mobile,role
+                fullName,email,mobile,role,city
             })
         }
 

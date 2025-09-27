@@ -222,17 +222,10 @@ export const updateOrderStatus = async (req, res) => {
         shopOrder.status = status
         let deliveryBoysPayload = []
         if (status == "out of delivery" && !shopOrder.assignment) {
-            const { longitude, latitude } = order.deliveryAddress
             const nearByDeliveryBoys = await User.find({
-                role: "deliveryBoy",
-                location: {
-                    $near: {
-                        $geometry: { type: "Point", coordinates: [Number(longitude), Number(latitude)] },
-                        $maxDistance: 5000
-                    }
-                }
+                role: "deliveryBoy"
             })
-
+        
             const nearByIds = nearByDeliveryBoys.map(b => b._id)
             const busyIds = await DeliveryAssignment.find({
                 assignedTo: { $in: nearByIds },
