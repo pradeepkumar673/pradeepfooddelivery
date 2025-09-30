@@ -1,6 +1,7 @@
 import React from 'react'
 import scooter from "../assets/scooter.png"
 import home from "../assets/home.png"
+import shop from "../assets/shop.png"
 import "leaflet/dist/leaflet.css"
 import L from "leaflet"
 import { MapContainer, Marker, Polyline, Popup, TileLayer } from 'react-leaflet'
@@ -14,19 +15,37 @@ const customerIcon = new L.Icon({
     iconSize: [40, 40],
     iconAnchor: [20, 40]
 })
+
+const shopIcon = new L.Icon({
+    iconUrl: shop,
+    iconSize: [40, 40],
+    iconAnchor: [20, 40]
+})
 function DeliveryBoyTracking({ data }) {
 
     const deliveryBoyLat = data.deliveryBoyLocation.lat
     const deliveryBoylon = data.deliveryBoyLocation.lon
     const customerLat = data.customerLocation.lat
     const customerlon = data.customerLocation.lon
+    const shopLat = data.shopLocation?.lat
+    const shopLon = data.shopLocation?.lon
 
-    const path = [
+    let path = [
         [deliveryBoyLat, deliveryBoylon],
         [customerLat, customerlon]
     ]
+    let center = [deliveryBoyLat, deliveryBoylon]
 
-    const center = [deliveryBoyLat, deliveryBoylon]
+    if (shopLat && shopLon) {
+        path = [
+            [shopLat, shopLon],
+            [deliveryBoyLat, deliveryBoylon],
+            [customerLat, customerlon]
+        ]
+        const avgLat = (shopLat + deliveryBoyLat + customerLat) / 3
+        const avgLon = (shopLon + deliveryBoylon + customerlon) / 3
+        center = [avgLat, avgLon]
+    }
 
     return (
         <div className='w-full h-[400px] mt-3 rounded-xl overflow-hidden shadow-md'>
@@ -42,8 +61,13 @@ function DeliveryBoyTracking({ data }) {
              <Marker position={[deliveryBoyLat,deliveryBoylon]} icon={deliveryBoyIcon}>
              <Popup>Delivery Boy</Popup>
              </Marker>
+             {shopLat && shopLon && (
+                 <Marker position={[shopLat, shopLon]} icon={shopIcon}>
+                     <Popup>Shop</Popup>
+                 </Marker>
+             )}
               <Marker position={[customerLat,customerlon]} icon={customerIcon}>
-             <Popup>Delivery Boy</Popup>
+             <Popup>Customer</Popup>
              </Marker>
 
 

@@ -197,7 +197,7 @@ availableAssignments.map((a,index)=>(
  <p className='text-xs text-gray-400'>{currentOrder.shopOrder.shopOrderItems.length} items | {currentOrder.shopOrder.subtotal}</p>
 </div>
 
- <DeliveryBoyTracking data={{ 
+ <DeliveryBoyTracking data={{
   deliveryBoyLocation:deliveryBoyLocation || {
         lat: userData.location.coordinates[1],
         lon: userData.location.coordinates[0]
@@ -205,7 +205,9 @@ availableAssignments.map((a,index)=>(
       customerLocation: {
         lat: currentOrder.deliveryAddress.latitude,
         lon: currentOrder.deliveryAddress.longitude
-      }}} />
+      },
+      shopLocation: currentOrder.shopLocation || { lat: null, lon: null }
+    }} />
 {!showOtpBox ? <button className='mt-4 w-full bg-green-500 text-white font-semibold py-2 px-4 rounded-xl shadow-md hover:bg-green-600 active:scale-95 transition-all duration-200' onClick={sendOtp} disabled={loading}>
 {loading?<ClipLoader size={20} color='white'/> :"Mark As Delivered"}
  </button>:<div className='mt-4 p-4 border rounded-xl bg-gray-50'>

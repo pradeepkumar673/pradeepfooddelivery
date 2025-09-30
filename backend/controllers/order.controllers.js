@@ -408,7 +408,10 @@ export const getCurrentOrder = async (req, res) => {
             .populate("assignedTo", "fullName email mobile location")
             .populate({
                 path: "order",
-                populate: [{ path: "user", select: "fullName email location mobile" }]
+                populate: [
+                    { path: "user", select: "fullName email location mobile" },
+                    { path: "shopOrders.shop", select: "location" }
+                ]
 
             })
 
@@ -437,13 +440,20 @@ export const getCurrentOrder = async (req, res) => {
             customerLocation.lon = assignment.order.deliveryAddress.longitude
         }
 
+        let shopLocation = { lat: null, lon: null }
+        if (shopOrder.shop && shopOrder.shop.location && shopOrder.shop.location.coordinates && shopOrder.shop.location.coordinates.length === 2) {
+            shopLocation.lat = shopOrder.shop.location.coordinates[1]
+            shopLocation.lon = shopOrder.shop.location.coordinates[0]
+        }
+
         return res.status(200).json({
             _id: assignment.order._id,
             user: assignment.order.user,
             shopOrder,
             deliveryAddress: assignment.order.deliveryAddress,
             deliveryBoyLocation,
-            customerLocation
+            customerLocation,
+            shopLocation
         })
 
 
