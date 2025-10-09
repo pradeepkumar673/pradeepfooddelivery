@@ -5,8 +5,8 @@ import rateLimit from "express-rate-limit"
 const authRouter=express.Router()
 
 const otpRateLimiter = rateLimit({
-  windowMs: 60 * 1000, // 1 minute window
-  max: 5, // limit each IP to 5 requests per window
+  windowMs: 60 * 1000, 
+  max: 5, 
   message: "Too many OTP requests. Please try again after 1 minute.",
   headers: true,
 });
