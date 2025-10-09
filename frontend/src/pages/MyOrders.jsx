@@ -43,7 +43,7 @@ return ()=>{
           </div>
           <h1 className='text-2xl font-bold  text-start'>My Orders</h1>
         </div>
-        <div className='space-y-6 autoscroll'>
+        <div className='space-y-4'>
           {myOrders?.map((order,index)=>(
             userData.role=="user" ?
             (
