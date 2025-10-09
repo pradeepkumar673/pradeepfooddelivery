@@ -194,8 +194,14 @@ function UserDashboard() {
   }, [categories])
 
   return (
-    <div className='w-screen min-h-screen flex flex-col gap-5 items-center bg-[#FEFAE0] overflow-y-auto'>
+    <div className='w-screen min-h-screen flex flex-col gap-5 items-center overflow-y-auto'>
       <Nav />
+<div className="flex flex-col items-center justify-center h-[80vh]">
+  <video className="w-full h-full object-cover rounded-xl shadow-lg" controls autoPlay muted loop>
+    <source src="/assets/video.mp4" type="video/mp4" />
+    Your browser does not support the video tag.
+  </video>
+</div>
       
       {/* Location Header - Interactive Icon */}
       <div className="w-full max-w-6xl flex justify-between items-center p-4">

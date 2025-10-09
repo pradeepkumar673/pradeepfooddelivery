@@ -1,7 +1,7 @@
 @import "tailwindcss";
 
 * {
- 
+
   scrollbar-width: none; /* Firefox */
   -ms-overflow-style: none;  /* IE/Edge purane versions */
 }
@@ -9,4 +9,24 @@
 ::-webkit-scrollbar, 
 ::-webkit-scrollbar {
   display: none; /* Chrome, Safari, Opera */
+}
+
+@keyframes autoscroll {
+  0% {
+    transform: translateY(0);
+  }
+  50% {
+    transform: translateY(-50%);
+  }
+  100% {
+    transform: translateY(0);
+  }
+}
+
+.autoscroll {
+  animation: autoscroll 20s ease-in-out infinite;
+  display: flex;
+  flex-direction: column;
+  overflow-y: auto;
+  height: 60vh;
 }

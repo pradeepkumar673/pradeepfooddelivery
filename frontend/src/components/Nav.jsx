@@ -230,9 +230,6 @@ function Nav() {
                     </div>
                 </div>
             )}
-
-            {/* Navbar fixed irukkaraala space add pannanum */}
-            <div className="h-20"></div>
         </>
     )
 }

@@ -7,7 +7,7 @@
     "start": "node index.js",
     "dev": "nodemon index.js"
   },
-  "author": "Virtual code",
+  "author": "PradeepKumar",
   "license": "ISC",
   "dependencies": {
     "bcryptjs": "^3.0.2",
