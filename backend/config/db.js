@@ -1,11 +1,12 @@
+
 import mongoose from "mongoose"
 
 const connectDb=async () => {
     try {
         await mongoose.connect(process.env.MONGODB_URL)
-        console.log("db connect aidichi, poi ippo frontend deploy pannu")
+        console.log("Super Da, Database Connect Aidichi")
     } catch (error) {
-        console.log("db la problem")
+        console.log("Db Connect Aagala:", error.message);
     }
 }
 
