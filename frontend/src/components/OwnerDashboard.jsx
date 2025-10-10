@@ -4,7 +4,7 @@ import { useSelector } from 'react-redux'
 import { FaUtensils, FaBell } from "react-icons/fa";
 import { useNavigate } from 'react-router-dom';
 import { FaPen } from "react-icons/fa";
-import OwnerItemCard from './ownerItemCard';
+import OwnerItemCard from './OwnerItemCard.jsx';
 import useGetMyShop from '../hooks/useGetMyShop';
 import axios from 'axios';
 import { serverUrl } from '../App';
