@@ -17,9 +17,18 @@ import { socketHandler } from "./socket.js"
 const app=express()
 const server=http.createServer(app)
 
+// Trust proxy so secure cookies work behind Render/NGINX
+app.set('trust proxy', 1)
+
+// Allow frontend origin from environment and localhost for development
+const allowedOrigins = [
+  process.env.FRONTEND_ORIGIN,
+  "http://localhost:5173"
+].filter(Boolean)
+
 const io=new Server(server,{
    cors:{
-    origin:"http://localhost:5173",
+    origin: allowedOrigins,
     credentials:true,
     methods:['POST','GET']
 }
@@ -31,8 +40,14 @@ app.set("io",io)
 
 const port=process.env.PORT || 5000
 app.use(cors({
-    origin:"http://localhost:5173",
-    credentials:true
+    origin: function(origin, callback) {
+        if (!origin) return callback(null, true)
+        if (allowedOrigins.includes(origin)) return callback(null, true)
+        return callback(new Error('Not allowed by CORS'))
+    },
+    credentials:true,
+    methods: ['GET','POST','PUT','PATCH','DELETE','OPTIONS'],
+    allowedHeaders: ['Content-Type','Authorization','X-Requested-With','Accept']
 }))
 app.use(express.json())
 app.use(cookieParser())

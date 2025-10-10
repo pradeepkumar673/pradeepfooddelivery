@@ -2,6 +2,13 @@ import User from "../models/user.model.js"
 import bcrypt, { hash } from "bcryptjs"
 import genToken from "../utils/token.js"
 import { sendOtpMail } from "../utils/mail.js"
+const isProduction = process.env.NODE_ENV === 'production'
+const cookieOptions = {
+  httpOnly: true,
+  secure: isProduction,
+  sameSite: isProduction ? 'none' : 'lax',
+  maxAge: 7 * 24 * 60 * 60 * 1000
+}
 export const signUp=async (req,res) => {
     try {
         const {fullName,email,password,mobile,role,city}=req.body
@@ -27,12 +34,7 @@ export const signUp=async (req,res) => {
         })
 
         const token=await genToken(user._id)
-        res.cookie("token",token,{
-            secure:false,
-            sameSite:"strict",
-            maxAge:7*24*60*60*1000,
-            httpOnly:true
-        })
+        res.cookie("token", token, cookieOptions)
   
         return res.status(201).json(user)
 
@@ -55,12 +57,7 @@ export const signIn=async (req,res) => {
      }
 
         const token=await genToken(user._id)
-        res.cookie("token",token,{
-            secure:false,
-            sameSite:"strict",
-            maxAge:7*24*60*60*1000,
-            httpOnly:true
-        })
+        res.cookie("token", token, cookieOptions)
   
         return res.status(200).json(user)
 
@@ -71,7 +68,7 @@ export const signIn=async (req,res) => {
 
 export const signOut=async (req,res) => {
     try {
-        res.clearCookie("token")
+        res.clearCookie("token", cookieOptions)
 return res.status(200).json({message:"log out successfully"})
     } catch (error) {
         return res.status(500).json(`sign out error ${error}`)
@@ -142,12 +139,7 @@ export const googleAuth=async (req,res) => {
         }
 
         const token=await genToken(user._id)
-        res.cookie("token",token,{
-            secure:false,
-            sameSite:"strict",
-            maxAge:7*24*60*60*1000,
-            httpOnly:true
-        })
+        res.cookie("token", token, cookieOptions)
   
         return res.status(200).json(user)
 
