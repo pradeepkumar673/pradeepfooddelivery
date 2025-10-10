@@ -1,12 +1,11 @@
 import React, { useState, useEffect } from 'react';
-import { useDispatch, useSelector } from 'react-redux';
-import { closeOtpModal, setOtpError } from '../redux/userSlice';
+import { serverUrl } from '../App';
 
 const OtpVerificationModal = ({ email, onVerify }) => {
   const [otp, setOtp] = useState('');
   const [timer, setTimer] = useState(300); // 5 minutes in seconds
   const [resendDisabled, setResendDisabled] = useState(false);
-  const dispatch = useDispatch();
+  const [errorMsg, setErrorMsg] = useState(null);
   
   useEffect(() => {
     if (timer > 0) {
@@ -23,43 +22,45 @@ const OtpVerificationModal = ({ email, onVerify }) => {
   const handleResend = async () => {
     if (resendDisabled) return;
     
-    dispatch(setOtpError(null));
+    setErrorMsg(null);
     setTimer(300);
     setResendDisabled(true);
     
     try {
-      const response = await fetch('/api/send-otp', {
+      const response = await fetch(`${serverUrl}/api/auth/send-otp`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
+        credentials: 'include',
         body: JSON.stringify({ email })
       });
       
       if (!response.ok) {
-        dispatch(setOtpError('Failed to resend OTP. Please try again later.'));
+        setErrorMsg('Failed to resend OTP. Please try again later.');
       }
     } catch (error) {
-      dispatch(setOtpError('Network error. Please check your connection.'));
+      setErrorMsg('Network error. Please check your connection.');
     }
   };
 
   const handleSubmit = async (e) => {
     e.preventDefault();
-    dispatch(setOtpError(null));
+    setErrorMsg(null);
     
     try {
-      const response = await fetch('/api/verify-otp', {
+      const response = await fetch(`${serverUrl}/api/auth/verify-otp`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
+        credentials: 'include',
         body: JSON.stringify({ email, otp })
       });
       
       if (response.ok) {
         onVerify();
       } else {
-        dispatch(setOtpError('Invalid or expired OTP. Please try again.'));
+        setErrorMsg('Invalid or expired OTP. Please try again.');
       }
     } catch (error) {
-      dispatch(setOtpError('Network error. Please check your connection.'));
+      setErrorMsg('Network error. Please check your connection.');
     }
   };
 
@@ -75,9 +76,9 @@ const OtpVerificationModal = ({ email, onVerify }) => {
           </div>
         )}
         
-        {otpError && (
+        {errorMsg && (
           <div className="mb-4 p-3 bg-red-100 text-red-700 rounded">
-            {otpError}
+            {errorMsg}
           </div>
         )}
         
