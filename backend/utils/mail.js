@@ -12,23 +12,45 @@ const transporter = nodemailer.createTransport({
   },
 });
 
-export const sendOtpMail=async (to,otp) => {
-    await transporter.sendMail({
-        from:process.env.EMAIL,
-        to,
-        subject:"Reset Your Password",
-        html:`<p>Your OTP for password reset is <b>${otp}</b>. It expires in 5 minutes.</p>`
-    })
+export const sendOtpMail = async (to, otp) => {
+    try {
+        await transporter.sendMail({
+            from: process.env.EMAIL,
+            to,
+            subject: "Your OTP for Password Reset",
+            html: `
+                <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto; padding: 20px;">
+                    <h2 style="color: #333;">OTP for Password Reset</h2>
+                    <p>Your OTP is <strong>${otp}</strong>. It expires in 5 minutes.</p>
+                    <p style="color: #666; font-size: 0.9em;">Please enter this OTP in the app to reset your password. If you didn't request this, please ignore it.</p>
+                </div>
+            `
+        });
+    } catch (error) {
+        console.error(`Failed to send OTP email to ${to}: ${error.message}`);
+        throw new Error(`Failed to send OTP email to ${to}: ${error.message}`);
+    }
 }
 
 
-export const sendDeliveryOtpMail=async (user,otp) => {
-    await transporter.sendMail({
-        from:process.env.EMAIL,
-        to:user.email,
-        subject:"Delivery OTP",
-        html:`<p>Your OTP for delivery is <b>${otp}</b>. It expires in 5 minutes.</p>`
-    })
+export const sendDeliveryOtpMail = async (user, otp) => {
+    try {
+        await transporter.sendMail({
+            from: process.env.EMAIL,
+            to: user.email,
+            subject: "Delivery OTP Confirmation",
+            html: `
+                <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto; padding: 20px;">
+                    <h2 style="color: #333;">Delivery OTP Confirmation</h2>
+                    <p>Your delivery OTP is <strong>${otp}</strong>. It expires in 5 minutes.</p>
+                    <p style="color: #666; font-size: 0.9em;">This OTP is required to confirm your delivery address. Please enter it in the app.</p>
+                </div>
+            `
+        });
+    } catch (error) {
+        console.error(`Failed to send delivery OTP email to ${user.email}: ${error.message}`);
+        throw new Error(`Failed to send delivery OTP email to ${user.email}: ${error.message}`);
+    }
 }
 
 export const sendFoodAvailableNotification = async (shopName, city) => {

@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react'
-import Nav from './NaV.JSX'
+import Nav from './Nav.jsx'
 import { useSelector } from 'react-redux'
 import { FaUtensils, FaBell } from "react-icons/fa";
 import { useNavigate } from 'react-router-dom';
