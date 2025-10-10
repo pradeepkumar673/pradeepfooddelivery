@@ -1,6 +1,6 @@
 import User from "../models/user.model.js"
 import { sendOtpMail } from "../utils/mail.js"
-import { rateLimit } from "../utils/rateLimit.js"
+/*import { rateLimit } from "../utils/rateLimit.js"*/
 export const getCurrentUser=async (req,res) => {
     try {
         const userId=req.userId
