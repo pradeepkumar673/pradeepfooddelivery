@@ -26,6 +26,8 @@ import { io } from 'socket.io-client'
 import { setSocket } from './redux/userSlice'
 
 export const serverUrl = "https://pradeepfooddelivery-backend-wam8.onrender.com"
+// If deploying under a different domain, ensure backend CORS allows this origin
+export const clientOrigin = "https://pradeepfooddelivery.onrender.com"
 function App() {
   const { userData } = useSelector(state => state.user)
   const dispatch = useDispatch()

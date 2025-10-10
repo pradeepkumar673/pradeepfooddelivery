@@ -42,18 +42,28 @@ export const getMyShop=async (req,res) => {
     }
 }
 
-export const getShopByCity=async (req,res) => {
-    try {
-        const {city}=req.params
+export const getShopByCity = async (req, res) => {
+  try {
+    const { city } = req.params
 
-        const shops=await Shop.find({
-            city:{$regex:new RegExp(`^${city}$`, "i")}
-        }).populate('items')
-        if(!shops){
-            return res.status(400).json({message:"shops not found"})
-        }
-        return res.status(200).json(shops)
-    } catch (error) {
-        return res.status(500).json({message:`get shop by city error ${error}`})
+    // If city is missing, return all shops (global availability)
+    if (!city || city === 'null' || city === 'undefined' || city.trim() === '') {
+      const allShops = await Shop.find({}).populate('items')
+      return res.status(200).json(allShops)
     }
+
+    const shops = await Shop.find({
+      city: { $regex: new RegExp(`^${city}$`, 'i') }
+    }).populate('items')
+
+    // If no shops match the city, fall back to global list
+    if (!shops || shops.length === 0) {
+      const allShops = await Shop.find({}).populate('items')
+      return res.status(200).json(allShops)
+    }
+
+    return res.status(200).json(shops)
+  } catch (error) {
+    return res.status(500).json({ message: `get shop by city error ${error}` })
+  }
 }

@@ -14,26 +14,36 @@ import http from "http"
 import { Server } from "socket.io"
 import { socketHandler } from "./socket.js"
 
-const app=express()
-const server=http.createServer(app)
+const app = express()
+const server = http.createServer(app)
 
-const io=new Server(server,{
-   cors:{
-    origin:"https://pradeepfooddelivery-backend-wam8.onrender.com",
-    credentials:true,
-    methods:['POST','GET']
-}
+// Frontend origin (Render static site)
+const FRONTEND_ORIGIN = process.env.FRONTEND_ORIGIN || "https://pradeepfooddelivery.onrender.com"
+
+const io = new Server(server, {
+  cors: {
+    origin: FRONTEND_ORIGIN,
+    credentials: true,
+    methods: ["GET", "POST", "PUT", "DELETE", "OPTIONS"],
+  }
 })
 
 app.set("io",io)
 
 
 
-const port=process.env.PORT || 5000
-app.use(cors({
-    origin:"https://pradeepfooddelivery-backend-wam8.onrender.com",
-    credentials:true
-}))
+const port = process.env.PORT || 5000
+
+// CORS for API routes
+const corsOptions = {
+  origin: FRONTEND_ORIGIN,
+  credentials: true,
+  methods: ["GET", "POST", "PUT", "DELETE", "OPTIONS"],
+  allowedHeaders: ["Content-Type", "Authorization"],
+}
+app.use(cors(corsOptions))
+app.options("*", cors(corsOptions))
+
 app.use(express.json())
 app.use(cookieParser())
 app.use("/api/auth",authRouter)
