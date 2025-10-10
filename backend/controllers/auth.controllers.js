@@ -26,12 +26,12 @@ export const signUp=async (req,res) => {
             password:hashedPassword
         })
 
-        const token=await genToken(user._id)
-        res.cookie("token",token,{
-            secure:false,
-            sameSite:"strict",
-            maxAge:7*24*60*60*1000,
-            httpOnly:true
+        const token = await genToken(user._id)
+        res.cookie("token", token, {
+            secure: true,
+            sameSite: "none",
+            maxAge: 7 * 24 * 60 * 60 * 1000,
+            httpOnly: true,
         })
   
         return res.status(201).json(user)
@@ -54,12 +54,12 @@ export const signIn=async (req,res) => {
          return res.status(400).json({message:"incorrect Password"})
      }
 
-        const token=await genToken(user._id)
-        res.cookie("token",token,{
-            secure:false,
-            sameSite:"strict",
-            maxAge:7*24*60*60*1000,
-            httpOnly:true
+        const token = await genToken(user._id)
+        res.cookie("token", token, {
+            secure: true,
+            sameSite: "none",
+            maxAge: 7 * 24 * 60 * 60 * 1000,
+            httpOnly: true,
         })
   
         return res.status(200).json(user)
@@ -133,20 +133,30 @@ export const resetPassword=async (req,res) => {
 
 export const googleAuth=async (req,res) => {
     try {
-        const {fullName,email,mobile,role,city}=req.body
-        let user=await User.findOne({email})
-        if(!user){
-            user=await User.create({
-                fullName,email,mobile,role,city
+        const { fullName, email, mobile, role, city } = req.body
+        if (!email) {
+            return res.status(400).json({ message: "email is required" })
+        }
+
+        let user = await User.findOne({ email })
+        if (!user) {
+            // create with sensible defaults when info is missing
+            const derivedName = fullName || (email?.split("@")[0]) || "User"
+            user = await User.create({
+                fullName: derivedName,
+                email,
+                mobile: mobile || "0000000000",
+                role: role || "user",
+                city: city || "Global",
             })
         }
 
-        const token=await genToken(user._id)
-        res.cookie("token",token,{
-            secure:false,
-            sameSite:"strict",
-            maxAge:7*24*60*60*1000,
-            httpOnly:true
+        const token = await genToken(user._id)
+        res.cookie("token", token, {
+            secure: true,
+            sameSite: "none",
+            maxAge: 7 * 24 * 60 * 60 * 1000,
+            httpOnly: true,
         })
   
         return res.status(200).json(user)

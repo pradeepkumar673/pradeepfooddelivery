@@ -34,7 +34,7 @@ export const getMyShop=async (req,res) => {
             options:{sort:{updatedAt:-1}}
         })
         if(!shop){
-            return null
+            return res.status(200).json(null)
         }
         return res.status(200).json(shop)
     } catch (error) {
@@ -45,10 +45,11 @@ export const getMyShop=async (req,res) => {
 export const getShopByCity=async (req,res) => {
     try {
         const {city}=req.params
-
-        const shops=await Shop.find({
-            city:{$regex:new RegExp(`^${city}$`, "i")}
-        }).populate('items')
+        let filter = {}
+        if (city && city !== 'null' && city !== 'undefined' && city !== 'all') {
+            filter.city = { $regex: new RegExp(`^${city}$`, "i") }
+        }
+        const shops=await Shop.find(filter).populate('items')
         if(!shops){
             return res.status(400).json({message:"shops not found"})
         }
