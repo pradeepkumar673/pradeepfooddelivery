@@ -1,6 +1,5 @@
 import User from "../models/user.model.js"
 import { sendOtpMail } from "../utils/mail.js"
-/*import { rateLimit } from "../utils/rateLimit.js"*/
 export const getCurrentUser=async (req,res) => {
     try {
         const userId=req.userId
@@ -47,11 +46,7 @@ export const sendOtp = async (req, res) => {
             return res.status(400).json({ message: "User not found" })
         }
 
-        // Rate limiting
-        const { isRateLimited } = await rateLimit(req, 'signup-otp', 5, 60 * 60 * 1000)
-        if (isRateLimited) {
-            return res.status(429).json({ message: "Too many OTP requests. Please try again later." })
-        }
+        // Rate limiting is enforced at route level via express-rate-limit
 
         const otp = Math.floor(100000 + Math.random() * 900000).toString()
         const otpExpires = new Date(Date.now() + 10 * 60 * 1000)

@@ -14,37 +14,50 @@ import http from "http"
 import { Server } from "socket.io"
 import { socketHandler } from "./socket.js"
 
-const app=express()
-const server=http.createServer(app)
+const app = express()
+const server = http.createServer(app)
 
-const io=new Server(server,{
-   cors:{
-    origin:"https://pradeepfooddelivery-backend-wam8.onrender.com",
-    credentials:true,
-    methods:['POST','GET']
+// Allow the production frontend and local dev
+const allowedOrigins = [
+  process.env.FRONTEND_URL || "https://pradeepfooddelivery.onrender.com",
+  "http://localhost:5173",
+  "http://127.0.0.1:5173"
+]
+
+const corsOptions = {
+  origin: function (origin, callback) {
+    if (!origin) return callback(null, true) // SSR, curl, or same-origin
+    if (allowedOrigins.includes(origin)) return callback(null, true)
+    return callback(new Error("Not allowed by CORS"))
+  },
+  credentials: true,
+  methods: ["GET", "POST", "PUT", "PATCH", "DELETE", "OPTIONS"],
+  allowedHeaders: ["Content-Type", "Authorization", "X-Requested-With"],
 }
-})
 
-app.set("io",io)
+const io = new Server(server, { cors: corsOptions })
 
+app.set("io", io)
+const port = process.env.PORT || 5000
 
+// Trust proxy for correct secure cookies behind proxies (Render, etc.)
+app.set("trust proxy", 1)
 
-const port=process.env.PORT || 5000
-app.use(cors({
-    origin:"https://pradeepfooddelivery-backend-wam8.onrender.com",
-    credentials:true
-}))
+// CORS for REST endpoints + preflight
+app.use(cors(corsOptions))
+app.options("*", cors(corsOptions))
+
 app.use(express.json())
 app.use(cookieParser())
-app.use("/api/auth",authRouter)
-app.use("/api/user",userRouter)
-app.use("/api/shop",shopRouter)
-app.use("/api/item",itemRouter)
-app.use("/api/order",orderRouter)
+app.use("/api/auth", authRouter)
+app.use("/api/user", userRouter)
+app.use("/api/shop", shopRouter)
+app.use("/api/item", itemRouter)
+app.use("/api/order", orderRouter)
 
 socketHandler(io)
-server.listen(port,()=>{
-    connectDb()
-    console.log(`server started at ${port}`)
+server.listen(port, () => {
+  connectDb()
+  console.log(`server started at ${port}`)
 })
 
