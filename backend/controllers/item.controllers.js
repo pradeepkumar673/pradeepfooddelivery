@@ -122,11 +122,12 @@ export const deleteItem = async (req, res) => {
 export const getItemByCity = async (req, res) => {
     try {
         const { city } = req.params
-        let shopFilter = {}
-        if (city && city !== 'null' && city !== 'undefined' && city !== 'all') {
-            shopFilter.city = { $regex: new RegExp(`^${city}$`, "i") }
+        if (!city) {
+            return res.status(400).json({ message: "city is required" })
         }
-        const shops = await Shop.find(shopFilter).populate('items')
+        const shops = await Shop.find({
+            city: { $regex: new RegExp(`^${city}$`, "i") }
+        }).populate('items')
         if (!shops) {
             return res.status(400).json({ message: "shops not found" })
         }
@@ -158,14 +159,12 @@ export const getItemsByShop=async (req,res) => {
 export const searchItems=async (req,res) => {
     try {
         const {query,city}=req.query
-        if(!query){
-            return res.status(200).json([])
+        if(!query || !city){
+            return null
         }
-        let filter = {}
-        if (city && city !== 'null' && city !== 'undefined' && city !== 'all') {
-            filter.city = { $regex: new RegExp(`^${city}$`, "i") }
-        }
-        const shops=await Shop.find(filter).populate('items')
+        const shops=await Shop.find({
+            city:{$regex:new RegExp(`^${city}$`, "i")}
+        }).populate('items')
         if(!shops){
             return res.status(400).json({message:"shops not found"})
         }
