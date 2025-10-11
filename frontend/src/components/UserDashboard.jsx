@@ -67,21 +67,7 @@ function UserDashboard() {
     }
   };
 
-  // Add this useEffect to UserDashboard.jsx
-  useEffect(() => {
-    // If itemsInMyCity is empty but we have shops, extract items from shops
-    if ((!itemsInMyCity || itemsInMyCity.length === 0) && shopInMyCity && shopInMyCity.length > 0) {
-      console.log('🟡 Extracting items from shops...');
-      const allItemsFromShops = shopInMyCity.flatMap(shop =>
-        shop.items && Array.isArray(shop.items) ? shop.items : []
-      );
-      console.log('📦 Items from shops:', allItemsFromShops);
 
-      if (allItemsFromShops.length > 0) {
-        dispatch(setItemsInMyCity(allItemsFromShops));
-      }
-    }
-  }, [itemsInMyCity, shopInMyCity, dispatch]);
 
   // Add this debug useEffect
   useEffect(() => {
