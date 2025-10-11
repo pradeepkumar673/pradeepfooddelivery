@@ -6,20 +6,20 @@ import { addToCart } from '../redux/userSlice';
 function FoodCard({ data }) {
   const [quantity, setQuantity] = useState(0);
   const dispatch = useDispatch();
-  
+
   // SAFELY get cartItems from Redux
   const cartItems = useSelector(state => state.user?.cartItems || []);
-  
+
   const renderStars = (rating) => {
     const stars = [];
     const actualRating = rating || 0;
-    
+
     for (let i = 1; i <= 5; i++) {
       stars.push(
         (i <= actualRating) ? (
-          <FaStar key={i} className='text-yellow-500 text-lg'/>
+          <FaStar key={i} className='text-yellow-500 text-lg' />
         ) : (
-          <FaRegStar key={i} className='text-yellow-500 text-lg'/>
+          <FaRegStar key={i} className='text-yellow-500 text-lg' />
         )
       );
     }
@@ -55,29 +55,29 @@ function FoodCard({ data }) {
   const isInCart = cartItems.some(item => item.id === data?._id);
 
   return (
-    <div className='w-[250px] rounded-2xl border-2 border-[#008e39] bg-white shadow-xl overflow-hidden hover:shadow-xl transform hover:scale-105 transition-all duration-300 flex flex-col'>
+    <div className='w-[180px] rounded-xl border border-[#008e39] bg-white shadow-md overflow-hidden hover:shadow-lg transform hover:scale-102 transition-all duration-300 flex flex-col'>
       {/* Image Section */}
-      <div className='relative w-full h-[170px] flex justify-center items-center bg-white'>
-        <div className='absolute top-3 right-3 bg-white rounded-full p-1 shadow'>
-          {data.foodType === "veg" ? 
-            <FaLeaf className='text-green-600 text-lg'/> : 
-            <FaDrumstickBite className='text-red-600 text-lg'/>
+      <div className='relative w-full h-[120px] flex justify-center items-center bg-white'>
+        <div className='absolute top-2 right-2 bg-white rounded-full p-1 shadow'>
+          {data.foodType === "veg" ?
+            <FaLeaf className='text-green-600 text-sm' /> :
+            <FaDrumstickBite className='text-red-600 text-sm' />
           }
         </div>
-        <img 
-          src={data.image} 
-          alt={data.name} 
+        <img
+          src={data.image}
+          alt={data.name}
           className='w-full h-full object-cover transition-transform duration-300 hover:scale-105'
         />
       </div>
 
       {/* Content Section */}
-      <div className="flex-1 flex flex-col p-4">
-        <h1 className='font-semibold text-gray-900 text-base truncate'>{data.name}</h1>
-        
-        <p className='text-xs text-gray-500 truncate'>
+      <div className="flex-1 flex flex-col p-3">
+        <h1 className='font-semibold text-gray-900 text-sm truncate'>{data.name}</h1>
+
+        <p className='text-xs text-gray-500 truncate mt-1'>
           {data.foodType === "veg" ? "(Veg)" : "(Non-Veg)"}
-          <br/>
+          <br />
           Expires at {data.expiry}
         </p>
 
@@ -90,30 +90,30 @@ function FoodCard({ data }) {
       </div>
 
       {/* Footer Section */}
-      <div className='flex items-center justify-between mt-auto p-3'>
-        <span className='font-bold text-gray-900 text-lg'>
+      <div className='flex items-center justify-between mt-auto p-2'>
+        <span className='font-bold text-gray-900 text-base'>
           ₹{data.price}
         </span>
 
         <div className='flex items-center border rounded-full overflow-hidden shadow-sm'>
-          <button 
-            className='px-2 py-1 hover:bg-gray-100 transition' 
+          <button
+            className='px-1 py-1 hover:bg-gray-100 transition'
             onClick={handleDecrease}
           >
-            <FaMinus size={12}/>
+            <FaMinus size={10} />
           </button>
-          <span className='px-2 min-w-[20px] text-center'>{quantity}</span>
-          <button 
-            className='px-2 py-1 hover:bg-gray-100 transition' 
+          <span className='px-1 min-w-[16px] text-center text-sm'>{quantity}</span>
+          <button
+            className='px-1 py-1 hover:bg-gray-100 transition'
             onClick={handleIncrease}
           >
-            <FaPlus size={12}/>
+            <FaPlus size={10} />
           </button>
-          <button 
-            className={`${isInCart ? "bg-gray-800" : "bg-[#ff4d2d]"} text-white px-3 py-2 transition-colors`}
+          <button
+            className={`${isInCart ? "bg-gray-800" : "bg-[#ff4d2d]"} text-white px-2 py-1 transition-colors`}
             onClick={handleAddToCart}
           >
-            <FaShoppingCart size={16}/>
+            <FaShoppingCart size={14} />
           </button>
         </div>
       </div>
