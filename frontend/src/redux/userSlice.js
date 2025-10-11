@@ -29,7 +29,28 @@ const userSlice = createSlice({
       state.currentAddress = action.payload
     },
     setShopsInMyCity: (state, action) => {
-      state.shopInMyCity = action.payload
+      console.log('🔄 Redux: Setting shopsInMyCity', {
+        shopsLength: action.payload?.length,
+        currentItemsLength: state.itemsInMyCity?.length
+      });
+
+      const newShops = action.payload;
+      state.shopInMyCity = newShops;
+
+      // If we have new shops but no items, extract items from shops
+      if (newShops && newShops.length > 0 && (!state.itemsInMyCity || state.itemsInMyCity.length === 0)) {
+        console.log('🔄 Auto-extracting items from new shops');
+        const allItems = newShops.flatMap(shop =>
+          shop.items ? shop.items.map(item => ({
+            ...item,
+            shopId: shop._id,
+            shopName: shop.name,
+            shopImage: shop.image
+          })) : []
+        );
+        state.itemsInMyCity = allItems;
+        console.log('✅ Auto-extracted items:', allItems.length);
+      }
     },
     // In your setItemsInMyCity reducer, add logging:
     setItemsInMyCity: (state, action) => {
