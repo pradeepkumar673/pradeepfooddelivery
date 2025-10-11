@@ -17,7 +17,6 @@ import { socketHandler } from "./socket.js"
 const app = express()
 const server = http.createServer(app)
 
-// Allow the production frontend and local dev
 const allowedOrigins = [
   process.env.FRONTEND_URL || "https://pradeepfooddelivery.onrender.com",
   "http://localhost:5173",
@@ -28,7 +27,7 @@ const corsOptions = {
   origin: function (origin, callback) {
     if (!origin) return callback(null, true) // SSR, curl, or same-origin
     if (allowedOrigins.includes(origin)) return callback(null, true)
-    return callback(new Error("Not allowed by CORS"))
+    return callback(new Error("CORS vidala"))
   },
   credentials: true,
   methods: ["GET", "POST", "PUT", "PATCH", "DELETE", "OPTIONS"],
@@ -40,10 +39,8 @@ const io = new Server(server, { cors: corsOptions })
 app.set("io", io)
 const port = process.env.PORT || 5000
 
-// Trust proxy for correct secure cookies behind proxies (Render, etc.)
 app.set("trust proxy", 1)
 
-// CORS for REST endpoints + preflight
 app.use(cors(corsOptions))
 app.options("*", (req, res) => {
   res.setHeader("Access-Control-Allow-Origin", allowedOrigins.includes(req.headers.origin) ? req.headers.origin : allowedOrigins[0])
