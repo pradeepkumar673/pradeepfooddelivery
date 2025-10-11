@@ -24,6 +24,23 @@ export const notifyUsers = async (req, res) => {
   }
 };
 
+export const getAllItems = async (req, res) => {
+  try {
+    const items = await Item.find().populate("shop", "name city image");
+    
+    return res.status(200).json({
+      success: true,
+      items: items
+    });
+
+  } catch (error) {
+    return res.status(500).json({ 
+      success: false,
+      message: `get all items error ${error.message}` 
+    });
+  }
+}
+
 export const addItem = async (req, res) => {
     try {
         const { name, category, foodType, price, expiry, notify } = req.body
