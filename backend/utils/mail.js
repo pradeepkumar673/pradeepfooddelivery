@@ -160,26 +160,14 @@ export const sendFoodAvailableNotificationToAll = async (shopName) => {
     }
 }
 
-// Test function to verify Resend setup
-export const testResendConnection = async () => {
-    try {
-        // Try to send a test email to yourself
-        const { data, error } = await resend.emails.send({
-            from: 'Food Delivery <onboarding@resend.dev>',
-            to: ['your-email@gmail.com'], // Replace with your email
-            subject: 'Resend Test - Food Delivery',
-            html: '<p>Resend is working correctly with your Food Delivery app!</p>'
-        });
-
-        if (error) {
-            console.error('❌ Resend test failed:', error);
-            return false;
-        }
-
-        console.log('✅ Resend test email sent successfully!');
-        return true;
-    } catch (error) {
-        console.error('❌ Resend test failed:', error.message);
-        return false;
-    }
-}
+// Test function to verify email setup
+export const testEmailConnection = async () => {
+  try {
+    const currentTransporter = await getVerifiedTransporter();
+    console.log('✅ Email service is properly configured');
+    return true;
+  } catch (error) {
+    console.error('❌ Email service configuration error:', error.message);
+    return false;
+  }
+};
