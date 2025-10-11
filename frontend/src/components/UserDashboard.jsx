@@ -30,12 +30,11 @@ function UserDashboard() {
   const [isEditingLocation, setIsEditingLocation] = useState(false)
   const [tempLocation, setTempLocation] = useState('')
 
-  // Emergency items extraction - only runs once when shops are available
   useEffect(() => {
     if (shopInMyCity && shopInMyCity.length > 0 && (!itemsInMyCity || itemsInMyCity.length === 0)) {
       console.log('🚨 EMERGENCY: Extracting items from shops');
-      
-      const extractedItems = shopInMyCity.flatMap(shop => 
+
+      const extractedItems = shopInMyCity.flatMap(shop =>
         shop.items ? shop.items.map(item => ({
           ...item,
           shopId: shop._id,
@@ -43,7 +42,7 @@ function UserDashboard() {
           shopImage: shop.image
         })) : []
       );
-      
+
       if (extractedItems.length > 0) {
         console.log('✅ Emergency extracted:', extractedItems.length, 'items');
         dispatch(setItemsInMyCity(extractedItems));
@@ -218,15 +217,15 @@ function UserDashboard() {
     if (updatedItemsList && updatedItemsList.length > 0) {
       return updatedItemsList;
     }
-    
+
     // Priority 2: Items from Redux
     if (itemsInMyCity && itemsInMyCity.length > 0) {
       return itemsInMyCity;
     }
-    
+
     // Priority 3: Emergency extraction from shops
     if (shopInMyCity && shopInMyCity.length > 0) {
-      const emergencyItems = shopInMyCity.flatMap(shop => 
+      const emergencyItems = shopInMyCity.flatMap(shop =>
         shop.items ? shop.items.map(item => ({
           ...item,
           shopId: shop._id,
@@ -234,17 +233,17 @@ function UserDashboard() {
           shopImage: shop.image
         })) : []
       );
-      
+
       if (emergencyItems.length > 0) {
         // Update Redux for next time
         setTimeout(() => {
           dispatch(setItemsInMyCity(emergencyItems));
         }, 0);
-        
+
         return emergencyItems;
       }
     }
-    
+
     return [];
   }
 
@@ -253,17 +252,10 @@ function UserDashboard() {
   return (
     <div className='w-screen min-h-screen flex flex-col gap-5 items-center overflow-y-auto'>
       <Nav />
-      
-      {/* Debug Info */}
-      <div className="fixed top-20 right-4 bg-black text-white p-3 rounded-lg text-xs z-50 shadow-lg">
-        <div className="font-bold mb-1">DEBUG</div>
-        <div>Shops: {shopInMyCity?.length || 0}</div>
-        <div>Items: {itemsInMyCity?.length || 0}</div>
-        <div>Displaying: {itemsToDisplay.length}</div>
-      </div>
 
-      <div className="flex flex-col items-center justify-center h-[80vh]">
-        <video className="w-full h-full object-cover shadow-lg" controls autoPlay muted loop>
+
+      <div className="flex flex-col items-center justify-center h-[400px]">
+        <video className="w-full h-full object-cover shadow-xl " controls autoPlay muted loop>
           <source src="/assets/video.mp4" type="video/mp4" />
         </video>
       </div>
@@ -348,7 +340,7 @@ function UserDashboard() {
       {searchItems && searchItems.length > 0 && (
         <div className='w-full max-w-6xl flex flex-col gap-5 items-start p-5 bg-white shadow-md rounded-2xl mt-4'>
           <h1 className='text-gray-900 text-2xl sm:text-3xl font-semibold border-b border-gray-200 pb-2'>Search Results</h1>
-          <div className='w-full h-auto flex flex-wrap gap-6 justify-center'>
+          <div className='w-full h-auto grid grid-cols-2 md:grid-cols-3 gap-6 justify-center'>
             {searchItems.map((item) => (
               <FoodCard data={item} key={item._id} />
             ))}
@@ -357,7 +349,7 @@ function UserDashboard() {
       )}
 
       <div className="w-full max-w-6xl flex flex-col gap-5 items-start p-[10px]">
-        <h1 className='text-gray-800 text-2xl sm:text-3xl'>Inspiration for your first order</h1>
+        <h1 className='text-gray-800 text-2xl sm:text-3xl'>Why not start with these orders?</h1>
         <div className='w-full relative'>
           {showLeftCateButton && <button className='absolute left-0 top-1/2 -translate-y-1/2 bg-[#0A400C] text-white p-2 rounded-full shadow-lg hover:bg-[#819067] z-10' onClick={() => scrollHandler(cateScrollRef, "left")}><FaCircleChevronLeft /></button>}
           <div className='w-full flex overflow-x-auto gap-4 pb-2 ' ref={cateScrollRef}>
@@ -384,16 +376,16 @@ function UserDashboard() {
 
       <div className='w-full max-w-6xl flex flex-col gap-5 items-start p-[10px]'>
         <h1 className='text-gray-800 text-2xl sm:text-3xl'>Suggested Food Items {currentCity ? `in ${currentCity}` : ''}</h1>
-        <div className='w-full h-auto flex flex-wrap gap-[20px] justify-center'>
+        <div className='w-full h-auto grid grid-cols-2 md:grid-cols-3 gap-6 justify-center'>
           {itemsToDisplay.length > 0 ? (
             itemsToDisplay.map((item, index) => (
               <FoodCard key={item._id || `item-${index}`} data={item} />
             ))
           ) : (
-            <div className="text-center py-10 w-full">
+            <div className="text-center py-10 w-full col-span-2 md:col-span-3">
               <p className="text-gray-500 text-lg">No food items available</p>
               <div className="text-sm text-gray-400 mt-2">
-                Shops: {shopInMyCity?.length || 0} | 
+                Shops: {shopInMyCity?.length || 0} |
                 Items in state: {itemsInMyCity?.length || 0}
               </div>
             </div>
