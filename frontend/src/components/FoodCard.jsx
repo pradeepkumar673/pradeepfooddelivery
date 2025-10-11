@@ -17,9 +17,9 @@ function FoodCard({ data }) {
     for (let i = 1; i <= 5; i++) {
       stars.push(
         (i <= actualRating) ? (
-          <FaStar key={i} className='text-yellow-500 text-lg'/>
+          <FaStar key={i} className='text-yellow-500 lg:text-lg text-sm'/>
         ) : (
-          <FaRegStar key={i} className='text-yellow-500 text-lg'/>
+          <FaRegStar key={i} className='text-yellow-500 lg:text-lg text-sm'/>
         )
       );
     }
@@ -55,13 +55,13 @@ function FoodCard({ data }) {
   const isInCart = cartItems.some(item => item.id === data?._id);
 
   return (
-    <div className='w-[250px] sm:w-[140px] rounded-2xl border-2 border-[#008e39] bg-white shadow-xl overflow-hidden hover:shadow-xl transform hover:scale-95 transition-all duration-300 flex flex-col'>
+    <div className='lg:w-[250px] w-[160px] rounded-2xl border-2 border-[#008e39] bg-white shadow-xl overflow-hidden hover:shadow-xl transform hover:scale-95 transition-all duration-300 flex flex-col'>
       {/* Image Section */}
-      <div className='relative w-full h-[170px] sm:h-[100px] flex justify-center items-center bg-white'>
+      <div className='relative w-full lg:h-[170px] h-[100px] flex justify-center items-center bg-white'>
         <div className='absolute top-3 right-3 bg-white rounded-full p-1 shadow'>
           {data.foodType === "veg" ? 
-            <FaLeaf className='text-green-600 text-lg sm:text-base'/> : 
-            <FaDrumstickBite className='text-red-600 text-lg sm:text-base'/>
+            <FaLeaf className='text-green-600 lg:text-lg text-sm'/> : 
+            <FaDrumstickBite className='text-red-600 lg:text-lg text-sm'/>
           }
         </div>
         <img 
@@ -72,10 +72,10 @@ function FoodCard({ data }) {
       </div>
 
       {/* Content Section */}
-      <div className="flex-1 flex flex-col p-4 sm:p-2">
-        <h1 className='font-semibold text-gray-900 text-base sm:text-sm truncate'>{data.name}</h1>
+      <div className="flex-1 flex flex-col lg:p-4 p-2">
+        <h1 className='font-semibold text-gray-900 lg:text-base text-sm truncate'>{data.name}</h1>
         
-        <p className='text-xs sm:text-[10px] text-gray-500 truncate'>
+        <p className='lg:text-xs text-[10px] text-gray-500 truncate'>
           {data.foodType === "veg" ? "(Veg)" : "(Non-Veg)"}
           <br/>
           Expires at {data.expiry}
@@ -83,37 +83,37 @@ function FoodCard({ data }) {
 
         <div className='flex items-center gap-1 mt-1'>
           {renderStars(data.rating?.average || 0)}
-          <span className='text-xs sm:text-[10px] text-gray-500'>
+          <span className='lg:text-xs text-[10px] text-gray-500'>
             {data.rating?.count || 0}
           </span>
         </div>
       </div>
 
       {/* Footer Section */}
-      <div className='flex items-center justify-between mt-auto p-3 sm:p-2'>
-        <span className='font-bold text-gray-900 text-lg sm:text-base'>
+      <div className='flex items-center justify-between mt-auto lg:p-3 p-2'>
+        <span className='font-bold text-gray-900 lg:text-lg text-sm'>
           ₹{data.price}
         </span>
 
         <div className='flex items-center border rounded-full overflow-hidden shadow-sm'>
           <button 
-            className='px-2 py-1 hover:bg-gray-100 transition sm:px-1' 
+            className='lg:px-2 px-1 py-1 hover:bg-gray-100 transition' 
             onClick={handleDecrease}
           >
-            <FaMinus size={12} className='sm:w-3'/>
+            <FaMinus className='lg:w-3 w-2'/>
           </button>
-          <span className='px-2 min-w-[20px] text-center sm:text-sm sm:px-1'>{quantity}</span>
+          <span className='lg:px-2 px-1 min-w-[20px] text-center lg:text-base text-sm'>{quantity}</span>
           <button 
-            className='px-2 py-1 hover:bg-gray-100 transition sm:px-1' 
+            className='lg:px-2 px-1 py-1 hover:bg-gray-100 transition' 
             onClick={handleIncrease}
           >
-            <FaPlus size={12} className='sm:w-3'/>
+            <FaPlus className='lg:w-3 w-2'/>
           </button>
           <button 
-            className={`${isInCart ? "bg-gray-800" : "bg-[#ff4d2d]"} text-white px-3 py-2 transition-colors sm:px-2 sm:py-1`}
+            className={`${isInCart ? "bg-gray-800" : "bg-[#ff4d2d]"} text-white lg:px-3 px-2 lg:py-2 py-1 transition-colors`}
             onClick={handleAddToCart}
           >
-            <FaShoppingCart size={16} className='sm:w-3'/>
+            <FaShoppingCart className='lg:w-4 w-3'/>
           </button>
         </div>
       </div>
