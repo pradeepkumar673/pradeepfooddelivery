@@ -376,13 +376,13 @@ function UserDashboard() {
 
       <div className='w-full max-w-6xl flex flex-col gap-5 items-start p-[10px]'>
         <h1 className='text-gray-800 text-2xl sm:text-3xl'>Suggested Food Items {currentCity ? `in ${currentCity}` : ''}</h1>
-        <div className='w-full h-auto grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-2 justify-center'>
+        <div className=' w-full h-auto grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-2 justify-center'>
           {itemsToDisplay.length > 0 ? (
             itemsToDisplay.map((item, index) => (
               <FoodCard key={item._id || `item-${index}`} data={item} />
             ))
           ) : (
-            <div className="text-center py-10 w-full col-span-2 md:col-span-3 lg:col-span-4">
+            <div className=" text-center py-10 w-full col-span-2 md:col-span-3 lg:col-span-4">
               <p className="text-gray-500 text-lg">No food items available</p>
               <div className="text-sm text-gray-400 mt-2">
                 Shops: {shopInMyCity?.length || 0} |

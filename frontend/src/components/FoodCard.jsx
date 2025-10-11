@@ -55,13 +55,13 @@ function FoodCard({ data }) {
   const isInCart = cartItems.some(item => item.id === data?._id);
 
   return (
-    <div className='w-[180px] rounded-xl border border-[#008e39] bg-white shadow-md overflow-hidden hover:shadow-lg transform hover:scale-102 transition-all duration-300 flex flex-col'>
+    <div className='w-full max-w-[160px] sm:max-w-[180px] rounded-xl border border-[#008e39] bg-white shadow-md overflow-hidden hover:shadow-lg transform hover:scale-102 transition-all duration-300 flex flex-col'>
       {/* Image Section */}
-      <div className='relative w-full h-[120px] flex justify-center items-center bg-white'>
-        <div className='absolute top-2 right-2 bg-white rounded-full p-1 shadow'>
+      <div className='relative w-full h-[100px] sm:h-[120px] flex justify-center items-center bg-white'>
+        <div className='absolute top-1.5 right-1.5 bg-white rounded-full p-0.5 shadow'>
           {data.foodType === "veg" ?
-            <FaLeaf className='text-green-600 text-sm' /> :
-            <FaDrumstickBite className='text-red-600 text-sm' />
+            <FaLeaf className='text-green-600 text-xs sm:text-sm' /> :
+            <FaDrumstickBite className='text-red-600 text-xs sm:text-sm' />
           }
         </div>
         <img
@@ -72,48 +72,48 @@ function FoodCard({ data }) {
       </div>
 
       {/* Content Section */}
-      <div className="flex-1 flex flex-col p-3">
-        <h1 className='font-semibold text-gray-900 text-sm truncate'>{data.name}</h1>
+      <div className="flex-1 flex flex-col p-2 sm:p-3">
+        <h1 className='font-semibold text-gray-900 text-xs sm:text-sm truncate'>{data.name}</h1>
 
-        <p className='text-xs text-gray-500 truncate mt-1'>
+        <p className='text-[10px] sm:text-xs text-gray-500 truncate mt-0.5'>
           {data.foodType === "veg" ? "(Veg)" : "(Non-Veg)"}
           <br />
           Expires at {data.expiry}
         </p>
 
-        <div className='flex items-center gap-1 mt-1'>
+        <div className='flex items-center gap-0.5 sm:gap-1 mt-0.5 sm:mt-1'>
           {renderStars(data.rating?.average || 0)}
-          <span className='text-xs text-gray-500'>
+          <span className='text-[10px] sm:text-xs text-gray-500'>
             {data.rating?.count || 0}
           </span>
         </div>
       </div>
 
       {/* Footer Section */}
-      <div className='flex items-center justify-between mt-auto p-2'>
-        <span className='font-bold text-gray-900 text-base'>
+      <div className='flex items-center justify-between mt-auto p-1.5 sm:p-2'>
+        <span className='font-bold text-gray-900 text-sm sm:text-base'>
           ₹{data.price}
         </span>
 
         <div className='flex items-center border rounded-full overflow-hidden shadow-sm'>
           <button
-            className='px-1 py-1 hover:bg-gray-100 transition'
+            className='px-0.5 sm:px-1 py-0.5 hover:bg-gray-100 transition'
             onClick={handleDecrease}
           >
-            <FaMinus size={10} />
+            <FaMinus size={9} className='sm:w-[10px]' />
           </button>
-          <span className='px-1 min-w-[16px] text-center text-sm'>{quantity}</span>
+          <span className='px-0.5 sm:px-1 min-w-[14px] sm:min-w-[16px] text-center text-xs sm:text-sm'>{quantity}</span>
           <button
-            className='px-1 py-1 hover:bg-gray-100 transition'
+            className='px-0.5 sm:px-1 py-0.5 hover:bg-gray-100 transition'
             onClick={handleIncrease}
           >
-            <FaPlus size={10} />
+            <FaPlus size={9} className='sm:w-[10px]' />
           </button>
           <button
-            className={`${isInCart ? "bg-gray-800" : "bg-[#ff4d2d]"} text-white px-2 py-1 transition-colors`}
+            className={`${isInCart ? "bg-gray-800" : "bg-[#ff4d2d]"} text-white px-1.5 sm:px-2 py-0.5 sm:py-1 transition-colors`}
             onClick={handleAddToCart}
           >
-            <FaShoppingCart size={14} />
+            <FaShoppingCart size={12} className='sm:w-[14px]' />
           </button>
         </div>
       </div>
