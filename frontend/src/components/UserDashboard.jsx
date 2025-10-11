@@ -62,7 +62,7 @@ useEffect(() => {
     setIsAutoDetecting(false);
   }
 };
-  const fetchAllItems = async () => {
+ const fetchAllItems = async () => {
   try {
     console.log('🟡 Fetching items...');
     
