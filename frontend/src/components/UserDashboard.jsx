@@ -255,9 +255,11 @@ function UserDashboard() {
       
 
       <div className="flex flex-col items-center justify-center h-[80vh]">
-        <video className="w-full h-full object-cover shadow-xl " controls autoPlay muted loop>
-          <source src="/assets/video.mp4" type="video/mp4" />
-        </video>
+        <img
+          src="/src/assets/22932.jpg"
+          alt="Dashboard Background"
+          className="w-full h-full object-cover shadow-xl"
+        />
       </div>
 
       <div className="w-full max-w-6xl flex justify-between items-center p-4">
