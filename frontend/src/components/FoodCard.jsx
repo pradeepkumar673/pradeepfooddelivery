@@ -55,13 +55,13 @@ function FoodCard({ data }) {
   const isInCart = cartItems.some(item => item.id === data?._id);
 
   return (
-    <div className='w-[250px] rounded-2xl border-2 border-[#008e39] bg-white shadow-xl overflow-hidden hover:shadow-xl transform hover:scale-95 transition-all duration-300 flex flex-col'>
+    <div className='w-[250px] sm:w-[140px] rounded-2xl border-2 border-[#008e39] bg-white shadow-xl overflow-hidden hover:shadow-xl transform hover:scale-95 transition-all duration-300 flex flex-col'>
       {/* Image Section */}
-      <div className='relative w-full h-[170px] flex justify-center items-center bg-white'>
+      <div className='relative w-full h-[170px] sm:h-[100px] flex justify-center items-center bg-white'>
         <div className='absolute top-3 right-3 bg-white rounded-full p-1 shadow'>
           {data.foodType === "veg" ? 
-            <FaLeaf className='text-green-600 text-lg'/> : 
-            <FaDrumstickBite className='text-red-600 text-lg'/>
+            <FaLeaf className='text-green-600 text-lg sm:text-base'/> : 
+            <FaDrumstickBite className='text-red-600 text-lg sm:text-base'/>
           }
         </div>
         <img 
@@ -72,10 +72,10 @@ function FoodCard({ data }) {
       </div>
 
       {/* Content Section */}
-      <div className="flex-1 flex flex-col p-4">
-        <h1 className='font-semibold text-gray-900 text-base truncate'>{data.name}</h1>
+      <div className="flex-1 flex flex-col p-4 sm:p-2">
+        <h1 className='font-semibold text-gray-900 text-base sm:text-sm truncate'>{data.name}</h1>
         
-        <p className='text-xs text-gray-500 truncate'>
+        <p className='text-xs sm:text-[10px] text-gray-500 truncate'>
           {data.foodType === "veg" ? "(Veg)" : "(Non-Veg)"}
           <br/>
           Expires at {data.expiry}
@@ -83,37 +83,37 @@ function FoodCard({ data }) {
 
         <div className='flex items-center gap-1 mt-1'>
           {renderStars(data.rating?.average || 0)}
-          <span className='text-xs text-gray-500'>
+          <span className='text-xs sm:text-[10px] text-gray-500'>
             {data.rating?.count || 0}
           </span>
         </div>
       </div>
 
       {/* Footer Section */}
-      <div className='flex items-center justify-between mt-auto p-3'>
-        <span className='font-bold text-gray-900 text-lg'>
+      <div className='flex items-center justify-between mt-auto p-3 sm:p-2'>
+        <span className='font-bold text-gray-900 text-lg sm:text-base'>
           ₹{data.price}
         </span>
 
         <div className='flex items-center border rounded-full overflow-hidden shadow-sm'>
           <button 
-            className='px-2 py-1 hover:bg-gray-100 transition' 
+            className='px-2 py-1 hover:bg-gray-100 transition sm:px-1' 
             onClick={handleDecrease}
           >
-            <FaMinus size={12}/>
+            <FaMinus size={12} className='sm:w-3'/>
           </button>
-          <span className='px-2 min-w-[20px] text-center'>{quantity}</span>
+          <span className='px-2 min-w-[20px] text-center sm:text-sm sm:px-1'>{quantity}</span>
           <button 
-            className='px-2 py-1 hover:bg-gray-100 transition' 
+            className='px-2 py-1 hover:bg-gray-100 transition sm:px-1' 
             onClick={handleIncrease}
           >
-            <FaPlus size={12}/>
+            <FaPlus size={12} className='sm:w-3'/>
           </button>
           <button 
-            className={`${isInCart ? "bg-gray-800" : "bg-[#ff4d2d]"} text-white px-3 py-2 transition-colors`}
+            className={`${isInCart ? "bg-gray-800" : "bg-[#ff4d2d]"} text-white px-3 py-2 transition-colors sm:px-2 sm:py-1`}
             onClick={handleAddToCart}
           >
-            <FaShoppingCart size={16}/>
+            <FaShoppingCart size={16} className='sm:w-3'/>
           </button>
         </div>
       </div>
