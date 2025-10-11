@@ -40,32 +40,47 @@ function UserDashboard() {
   }, [itemsInMyCity, updatedItemsList, shopInMyCity]);
 
   // Also modify your fetchAllItems to log the API response:
-  const fetchAllItems = async () => {
-    try {
-      console.log('🟡 Fetching shops from /api/shop/all');
-      const response = await axios.get(`${serverUrl}/api/shop/all`);
-      console.log('🟢 API Response:', response.data);
-
-      if (response.data && response.data.length > 0) {
-        console.log('🏪 First shop items:', response.data[0].items);
-        const allItems = [];
-        response.data.forEach(shop => {
-          if (shop.items && shop.items.length > 0) {
-            console.log(`Shop "${shop.name}" has ${shop.items.length} items`);
-            allItems.push(...shop.items);
-          }
-        });
-        console.log('📦 Total items found:', allItems.length);
-        dispatch(setItemsInMyCity(allItems));
-      } else {
-        console.log('❌ No shops found in response');
-        dispatch(setItemsInMyCity([]));
-      }
-    } catch (error) {
-      console.error('❌ Error fetching items:', error);
+ const fetchAllItems = async () => {
+  try {
+    console.log('🟡 Fetching shops from /api/shop/all');
+    const response = await axios.get(`${serverUrl}/api/shop/all`);
+    console.log('🟢 API Response:', response.data);
+    
+    if (response.data && response.data.length > 0) {
+      console.log('🔍 DEBUG - Checking data structure:');
+      console.log('Shops:', response.data.length);
+      console.log('First shop items:', response.data[0].items);
+      console.log('First shop structure:', response.data[0]);
+      
+      // Extract all items from all shops
+      const allItems = [];
+      response.data.forEach(shop => {
+        if (shop.items && Array.isArray(shop.items)) {
+          console.log(`🏪 Shop "${shop.name}" has ${shop.items.length} items`);
+          // Add shop information to each item
+          shop.items.forEach(item => {
+            allItems.push({
+              ...item,
+              shopId: shop._id,
+              shopName: shop.name,
+              shopImage: shop.image
+            });
+          });
+        }
+      });
+      
+      console.log('✅ Found total food items:', allItems.length);
+      console.log('📦 Items data sample:', allItems.slice(0, 3));
+      dispatch(setItemsInMyCity(allItems));
+    } else {
+      console.log('❌ No shops found in response');
       dispatch(setItemsInMyCity([]));
     }
-  };
+  } catch (error) {
+    console.error('❌ Error fetching shops:', error);
+    dispatch(setItemsInMyCity([]));
+  }
+};
 
 
 

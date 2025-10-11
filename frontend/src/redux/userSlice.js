@@ -31,8 +31,13 @@ const userSlice = createSlice({
     setShopsInMyCity: (state, action) => {
       state.shopInMyCity = action.payload
     },
+    // In your setItemsInMyCity reducer, add logging:
     setItemsInMyCity: (state, action) => {
-      state.itemsInMyCity = action.payload
+      console.log('🔄 Redux: Setting itemsInMyCity', {
+        payloadLength: action.payload?.length,
+        payloadSample: action.payload?.slice(0, 2)
+      });
+      state.itemsInMyCity = action.payload;
     },
     setSocket: (state, action) => {
       state.socket = action.payload
@@ -105,5 +110,5 @@ const userSlice = createSlice({
   }
 })
 
-export const { setUserData, setCurrentAddress, setCurrentCity, setCurrentState, setShopsInMyCity, setItemsInMyCity, addToCart, updateQuantity, removeCartItem, setMyOrders, addMyOrder, updateOrderStatus, setSearchItems, setTotalAmount, setSocket ,updateRealtimeOrderStatus} = userSlice.actions
+export const { setUserData, setCurrentAddress, setCurrentCity, setCurrentState, setShopsInMyCity, setItemsInMyCity, addToCart, updateQuantity, removeCartItem, setMyOrders, addMyOrder, updateOrderStatus, setSearchItems, setTotalAmount, setSocket, updateRealtimeOrderStatus } = userSlice.actions
 export default userSlice.reducer
