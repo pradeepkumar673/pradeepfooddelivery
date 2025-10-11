@@ -30,33 +30,55 @@ function UserDashboard() {
   const [isEditingLocation, setIsEditingLocation] = useState(false)
   const [tempLocation, setTempLocation] = useState('')
 
-  // Check if location is set on component mount
-  useEffect(() => {
-    if (!currentCity) {
-      setShowLocationModal(true)
-      const timer = setTimeout(() => {
-        autoDetectLocation()
-      }, 2000)
-      return () => clearTimeout(timer)
-    }
-  }, [currentCity])
+useEffect(() => {
+  if (!currentCity) {
+    setShowLocationModal(true);
+    const timer = setTimeout(() => {
+      autoDetectLocation();
+    }, 2000);
+    return () => clearTimeout(timer);
+  } else {
+    console.log('🟡 City is set, fetching all items...');
+    fetchAllItems();
+  }
+}, [currentCity]);
 
   const autoDetectLocation = async () => {
-    setIsAutoDetecting(true)
+  setIsAutoDetecting(true);
+  try {
+    const response = await axios.get('https://ipapi.co/json/');
+    const { city, country } = response.data;
+      
+    if (city) {
+      dispatch(setCurrentCity(city));
+    }
+    fetchAllItems();
+    setShowLocationModal(false);
+  } catch (error) {
+    console.error('Error auto-detecting location:', error);
+    fetchAllItems();
+    setShowLocationModal(false);
+  } finally {
+    setIsAutoDetecting(false);
+  }
+};
+  const fetchAllItems = async () => {
     try {
-      const response = await axios.get('https://ipapi.co/json/')
-      const { city, country } = response.data
+      console.log('🟡 Fetching all items from /api/items/all...');
+      const response = await axios.get(`${serverUrl}/api/items/all`);
+      console.log('🟢 All items response:', response.data);
 
-      if (city) {
-        dispatch(setCurrentCity(city))
-        setShowLocationModal(false)
+      if (response.data.success) {
+        dispatch(setItemsInMyCity(response.data.items || []));
+      } else {
+        console.log('🔴 Failed to fetch items:', response.data);
+        dispatch(setItemsInMyCity([]));
       }
     } catch (error) {
-      console.error('Error auto-detecting location:', error)
-    } finally {
-      setIsAutoDetecting(false)
+      console.error('❌ Error fetching all items:', error);
+      dispatch(setItemsInMyCity([]));
     }
-  }
+  };
 
   const handleFilterByCategory = (category) => {
     if (category == "All") {
@@ -68,8 +90,14 @@ function UserDashboard() {
   }
 
   useEffect(() => {
-    setUpdatedItemsList(itemsInMyCity)
-  }, [itemsInMyCity])
+    console.log('🟡 Setting updatedItemsList from itemsInMyCity:', itemsInMyCity);
+    setUpdatedItemsList(itemsInMyCity);
+
+    if (!itemsInMyCity || itemsInMyCity.length === 0) {
+      console.log('🟡 No items found, fetching all items...');
+      fetchAllItems();
+    }
+  }, [itemsInMyCity]);
 
   const updateButton = (ref, setLeftButton, setRightButton) => {
     const element = ref.current
