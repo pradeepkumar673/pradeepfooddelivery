@@ -30,19 +30,10 @@ function UserDashboard() {
   const [isEditingLocation, setIsEditingLocation] = useState(false)
   const [tempLocation, setTempLocation] = useState('')
 
-  // Add this debug useEffect
-  useEffect(() => {
-    console.log('🔍 DEBUG - Current State:', {
-      itemsInMyCity,
-      updatedItemsList,
-      shopInMyCity
-    });
-  }, [itemsInMyCity, updatedItemsList, shopInMyCity]);
-
-  // Real-time items extraction when shops are available
+  // Emergency items extraction - only runs once when shops are available
   useEffect(() => {
     if (shopInMyCity && shopInMyCity.length > 0 && (!itemsInMyCity || itemsInMyCity.length === 0)) {
-      console.log('🔄 Real-time: Extracting items from available shops');
+      console.log('🚨 EMERGENCY: Extracting items from shops');
       
       const extractedItems = shopInMyCity.flatMap(shop => 
         shop.items ? shop.items.map(item => ({
@@ -54,24 +45,27 @@ function UserDashboard() {
       );
       
       if (extractedItems.length > 0) {
-        console.log('✅ Real-time: Extracted', extractedItems.length, 'items');
+        console.log('✅ Emergency extracted:', extractedItems.length, 'items');
         dispatch(setItemsInMyCity(extractedItems));
       }
     }
   }, [shopInMyCity, itemsInMyCity, dispatch]);
 
-  // Add this debug useEffect
+  // Update items list when itemsInMyCity changes
   useEffect(() => {
-    console.log('🔍 DEBUG - Checking data structure:');
-    console.log('Shops:', shopInMyCity);
-    console.log('Items:', itemsInMyCity);
+    setUpdatedItemsList(itemsInMyCity || [])
+  }, [itemsInMyCity])
 
-    if (shopInMyCity && shopInMyCity.length > 0) {
-      console.log('First shop items:', shopInMyCity[0].items);
-      console.log('First shop structure:', shopInMyCity[0]);
+  const handleFilterByCategory = (category) => {
+    if (category === "All") {
+      setUpdatedItemsList(itemsInMyCity || [])
+    } else {
+      const filteredList = (itemsInMyCity || []).filter(i => i.category === category)
+      setUpdatedItemsList(filteredList)
     }
-  }, [shopInMyCity, itemsInMyCity]);
+  }
 
+  // Location detection
   useEffect(() => {
     if (!currentCity) {
       setShowLocationModal(true);
@@ -86,7 +80,7 @@ function UserDashboard() {
     setIsAutoDetecting(true);
     try {
       const response = await axios.get('https://ipapi.co/json/');
-      const { city, country } = response.data;
+      const { city } = response.data;
       if (city) {
         dispatch(setCurrentCity(city));
       }
@@ -99,19 +93,6 @@ function UserDashboard() {
     }
   };
 
-  const handleFilterByCategory = (category) => {
-    if (category == "All") {
-      setUpdatedItemsList(itemsInMyCity)
-    } else {
-      const filteredList = itemsInMyCity?.filter(i => i.category === category)
-      setUpdatedItemsList(filteredList)
-    }
-  }
-
-  useEffect(() => {
-    setUpdatedItemsList(itemsInMyCity)
-  }, [itemsInMyCity])
-
   const updateButton = (ref, setLeftButton, setRightButton) => {
     const element = ref.current
     if (element) {
@@ -123,7 +104,7 @@ function UserDashboard() {
   const scrollHandler = (ref, direction) => {
     if (ref.current) {
       ref.current.scrollBy({
-        left: direction == "left" ? -200 : 200,
+        left: direction === "left" ? -200 : 200,
         behavior: "smooth"
       })
     }
@@ -231,16 +212,54 @@ function UserDashboard() {
     }
   }, [categories])
 
+  // Get items to display with multiple fallbacks
+  const getItemsToDisplay = () => {
+    // Priority 1: Updated items (filtered by category)
+    if (updatedItemsList && updatedItemsList.length > 0) {
+      return updatedItemsList;
+    }
+    
+    // Priority 2: Items from Redux
+    if (itemsInMyCity && itemsInMyCity.length > 0) {
+      return itemsInMyCity;
+    }
+    
+    // Priority 3: Emergency extraction from shops
+    if (shopInMyCity && shopInMyCity.length > 0) {
+      const emergencyItems = shopInMyCity.flatMap(shop => 
+        shop.items ? shop.items.map(item => ({
+          ...item,
+          shopId: shop._id,
+          shopName: shop.name,
+          shopImage: shop.image
+        })) : []
+      );
+      
+      if (emergencyItems.length > 0) {
+        // Update Redux for next time
+        setTimeout(() => {
+          dispatch(setItemsInMyCity(emergencyItems));
+        }, 0);
+        
+        return emergencyItems;
+      }
+    }
+    
+    return [];
+  }
+
+  const itemsToDisplay = getItemsToDisplay();
+
   return (
     <div className='w-screen min-h-screen flex flex-col gap-5 items-center overflow-y-auto'>
       <Nav />
       
-      {/* Debug Component - Add this */}
+      {/* Debug Info */}
       <div className="fixed top-20 right-4 bg-black text-white p-3 rounded-lg text-xs z-50 shadow-lg">
-        <div className="font-bold mb-1">DEBUG STATE</div>
+        <div className="font-bold mb-1">DEBUG</div>
         <div>Shops: {shopInMyCity?.length || 0}</div>
-        <div>Items in Redux: {itemsInMyCity?.length || 0}</div>
-        <div>Updated Items: {updatedItemsList?.length || 0}</div>
+        <div>Items: {itemsInMyCity?.length || 0}</div>
+        <div>Displaying: {itemsToDisplay.length}</div>
       </div>
 
       <div className="flex flex-col items-center justify-center h-[80vh]">
@@ -363,63 +382,22 @@ function UserDashboard() {
         </div>
       </div>
 
-      {/* REPLACE THIS ENTIRE SECTION - This is the key fix */}
       <div className='w-full max-w-6xl flex flex-col gap-5 items-start p-[10px]'>
         <h1 className='text-gray-800 text-2xl sm:text-3xl'>Suggested Food Items {currentCity ? `in ${currentCity}` : ''}</h1>
-
         <div className='w-full h-auto flex flex-wrap gap-[20px] justify-center'>
-          {(() => {
-            // EMERGENCY FALLBACK SYSTEM
-            let itemsToDisplay = [];
-            
-            // Priority 1: Use updatedItemsList
-            if (updatedItemsList && updatedItemsList.length > 0) {
-              itemsToDisplay = updatedItemsList;
-              console.log('🎯 Using updatedItemsList:', itemsToDisplay.length);
-            } 
-            // Priority 2: Use itemsInMyCity from Redux
-            else if (itemsInMyCity && itemsInMyCity.length > 0) {
-              itemsToDisplay = itemsInMyCity;
-              console.log('🎯 Using itemsInMyCity:', itemsToDisplay.length);
-            }
-            // Priority 3: Extract from shops in real-time (EMERGENCY FALLBACK)
-            else if (shopInMyCity && shopInMyCity.length > 0) {
-              console.log('🚨 EMERGENCY: Extracting items from shops in real-time');
-              itemsToDisplay = shopInMyCity.flatMap(shop => 
-                shop.items ? shop.items.map(item => ({
-                  ...item,
-                  shopId: shop._id,
-                  shopName: shop.name,
-                  shopImage: shop.image
-                })) : []
-              );
-              console.log('🚨 EMERGENCY: Extracted', itemsToDisplay.length, 'items');
-              
-              // Also update Redux for future use
-              if (itemsToDisplay.length > 0) {
-                setTimeout(() => {
-                  dispatch(setItemsInMyCity(itemsToDisplay));
-                }, 0);
-              }
-            }
-            
-            // Render the items
-            if (itemsToDisplay.length > 0) {
-              return itemsToDisplay.map((item, index) => (
-                <FoodCard key={item._id || `item-${index}`} data={item} />
-              ));
-            } else {
-              return (
-                <div className="text-center py-10 w-full">
-                  <p className="text-gray-500 text-lg">No food items available</p>
-                  <div className="text-sm text-gray-400 mt-2">
-                    Shops: {shopInMyCity?.length || 0} | 
-                    Items in state: {itemsInMyCity?.length || 0}
-                  </div>
-                </div>
-              );
-            }
-          })()}
+          {itemsToDisplay.length > 0 ? (
+            itemsToDisplay.map((item, index) => (
+              <FoodCard key={item._id || `item-${index}`} data={item} />
+            ))
+          ) : (
+            <div className="text-center py-10 w-full">
+              <p className="text-gray-500 text-lg">No food items available</p>
+              <div className="text-sm text-gray-400 mt-2">
+                Shops: {shopInMyCity?.length || 0} | 
+                Items in state: {itemsInMyCity?.length || 0}
+              </div>
+            </div>
+          )}
         </div>
       </div>
     </div>
