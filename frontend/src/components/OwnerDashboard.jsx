@@ -30,88 +30,33 @@ function UserDashboard() {
   const [isEditingLocation, setIsEditingLocation] = useState(false)
   const [tempLocation, setTempLocation] = useState('')
 
+  // Check if location is set on component mount
   useEffect(() => {
     if (!currentCity) {
-      setShowLocationModal(true);
+      setShowLocationModal(true)
       const timer = setTimeout(() => {
-        autoDetectLocation();
-      }, 2000);
-      return () => clearTimeout(timer);
-    } else {
-      console.log('🟡 City is set, fetching all items...');
-      fetchAllItems();
+        autoDetectLocation()
+      }, 2000)
+      return () => clearTimeout(timer)
     }
-  }, [currentCity]);
+  }, [currentCity])
 
   const autoDetectLocation = async () => {
-    setIsAutoDetecting(true);
+    setIsAutoDetecting(true)
     try {
-      const response = await axios.get('https://ipapi.co/json/');
-      const { city, country } = response.data;
-        
+      const response = await axios.get('https://ipapi.co/json/')
+      const { city, country } = response.data
+      
       if (city) {
-        dispatch(setCurrentCity(city));
+        dispatch(setCurrentCity(city))
+        setShowLocationModal(false)
       }
-      fetchAllItems();
-      setShowLocationModal(false);
     } catch (error) {
-      console.error('Error auto-detecting location:', error);
-      fetchAllItems();
-      setShowLocationModal(false);
+      console.error('Error auto-detecting location:', error)
     } finally {
-      setIsAutoDetecting(false);
+      setIsAutoDetecting(false)
     }
-  };
-
-  const fetchAllItems = async () => {
-    try {
-      console.log('🟡 Fetching items...');
-      
-      // Try multiple endpoints
-      const endpoints = [
-        `${serverUrl}/api/items/get-all-items`,
-        `${serverUrl}/api/items/all`,
-        `${serverUrl}/api/items/get-by-city/${currentCity}`,
-        `${serverUrl}/api/shop/all`
-      ];
-      
-      for (const endpoint of endpoints) {
-        try {
-          console.log(`🟡 Trying: ${endpoint}`);
-          const response = await axios.get(endpoint);
-          console.log('🟢 Response:', response.data);
-          
-          // Handle different response formats
-          if (response.data.items) {
-            dispatch(setItemsInMyCity(response.data.items));
-            return;
-          } else if (Array.isArray(response.data)) {
-            // If it's an array of items
-            if (response.data.length > 0 && response.data[0].name) {
-              dispatch(setItemsInMyCity(response.data));
-              return;
-            }
-            // If it's an array of shops with items
-            else if (response.data.length > 0 && response.data[0].items) {
-              const allItems = response.data.flatMap(shop => shop.items || []);
-              dispatch(setItemsInMyCity(allItems));
-              return;
-            }
-          }
-        } catch (error) {
-          console.log(`🔴 ${endpoint} failed:`, error.message);
-        }
-      }
-      
-      // If all endpoints fail
-      console.log('❌ All endpoints failed');
-      dispatch(setItemsInMyCity([]));
-      
-    } catch (error) {
-      console.error('❌ Error fetching items:', error);
-      dispatch(setItemsInMyCity([]));
-    }
-  };
+  }
 
   const handleFilterByCategory = (category) => {
     if (category == "All") {
@@ -123,14 +68,8 @@ function UserDashboard() {
   }
 
   useEffect(() => {
-    console.log('🟡 Setting updatedItemsList from itemsInMyCity:', itemsInMyCity);
-    setUpdatedItemsList(itemsInMyCity);
-
-    if (!itemsInMyCity || itemsInMyCity.length === 0) {
-      console.log('🟡 No items found, fetching all items...');
-      fetchAllItems();
-    }
-  }, [itemsInMyCity]);
+    setUpdatedItemsList(itemsInMyCity)
+  }, [itemsInMyCity])
 
   const updateButton = (ref, setLeftButton, setRightButton) => {
     const element = ref.current
@@ -175,7 +114,7 @@ function UserDashboard() {
       setShowLocationModal(true)
       return
     }
-
+    
     setIsEditingLocation(true)
     setTempLocation(currentCity)
   }
@@ -232,6 +171,38 @@ function UserDashboard() {
     }
   }
 
+  // Fetch items when city changes
+  useEffect(() => {
+    const fetchItemsForCity = async () => {
+      if (currentCity) {
+        try {
+          // Try city-specific items first
+          const response = await axios.get(`${serverUrl}/api/items/get-by-city/${currentCity}`)
+          if (response.data && response.data.length > 0) {
+            dispatch(setItemsInMyCity(response.data))
+          } else {
+            // Fallback to all items
+            const allResponse = await axios.get(`${serverUrl}/api/shop/all`)
+            if (allResponse.data && allResponse.data.length > 0) {
+              const allItems = []
+              allResponse.data.forEach(shop => {
+                if (shop.items && shop.items.length > 0) {
+                  allItems.push(...shop.items)
+                }
+              })
+              dispatch(setItemsInMyCity(allItems))
+            }
+          }
+        } catch (error) {
+          console.error('Error fetching items:', error)
+          dispatch(setItemsInMyCity([]))
+        }
+      }
+    }
+
+    fetchItemsForCity()
+  }, [currentCity, dispatch])
+
   useEffect(() => {
     if (cateScrollRef.current) {
       updateButton(cateScrollRef, setShowLeftCateButton, setShowRightCateButton)
@@ -257,16 +228,18 @@ function UserDashboard() {
   return (
     <div className='w-screen min-h-screen flex flex-col gap-5 items-center overflow-y-auto'>
       <Nav />
+      
       <div className="flex flex-col items-center justify-center h-[80vh]">
-        <video className="w-full h-full object-cover shadow-lg" controls autoPlay muted loop>
+        <video className="w-full h-full object-cover rounded-xl shadow-lg" controls autoPlay muted loop>
           <source src="/assets/video.mp4" type="video/mp4" />
           Your browser does not support the video tag.
         </video>
       </div>
-
+      
+      {/* Location Header */}
       <div className="w-full max-w-6xl flex justify-between items-center p-4">
         <div></div>
-
+        
         <div className="flex items-center gap-3">
           {isEditingLocation ? (
             <div className="flex items-center gap-2 bg-white border border-[#B1AB86] rounded-full px-4 py-2 shadow-md">
@@ -280,14 +253,14 @@ function UserDashboard() {
                 autoFocus
               />
               <div className="flex gap-1">
-                <button
+                <button 
                   onClick={handleLocationSave}
                   className="text-green-500 hover:text-green-600 p-1"
                   disabled={!tempLocation.trim()}
                 >
                   <FaCheck />
                 </button>
-                <button
+                <button 
                   onClick={handleLocationCancel}
                   className="text-red-500 hover:text-red-600 p-1"
                 >
@@ -296,7 +269,7 @@ function UserDashboard() {
               </div>
             </div>
           ) : (
-            <button
+            <button 
               onClick={handleLocationIconClick}
               className="flex items-center gap-2 bg-white text-gray-700 px-4 py-2 rounded-full shadow-md hover:shadow-lg transition-shadow group"
             >
@@ -313,6 +286,7 @@ function UserDashboard() {
         </div>
       </div>
 
+      {/* Location Modal */}
       {showLocationModal && (
         <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
           <div className="bg-white rounded-2xl p-6 max-w-md w-full mx-4">
@@ -320,13 +294,13 @@ function UserDashboard() {
               <FaMapMarkerAlt className="text-[#0A400C] text-2xl" />
               <h2 className="text-2xl font-bold">Set Your Location</h2>
             </div>
-
+            
             <p className="text-gray-600 mb-6">
-              {isAutoDetecting
-                ? "Detecting your location..."
+              {isAutoDetecting 
+                ? "Detecting your location..." 
                 : "Please set your location to see relevant shops and food items"}
             </p>
-
+            
             <form onSubmit={handleLocationSubmit} className="mb-4">
               <div className="relative">
                 <input
@@ -357,7 +331,7 @@ function UserDashboard() {
                 <FaMapMarkerAlt />
                 {isAutoDetecting ? 'Detecting...' : 'Current Location'}
               </button>
-
+              
               {isAutoDetecting && (
                 <button
                   onClick={() => setIsAutoDetecting(false)}
@@ -384,6 +358,7 @@ function UserDashboard() {
         </div>
       )}
 
+      {/* Show content only if location is set */}
       {currentCity ? (
         <>
           <div className="w-full max-w-6xl flex flex-col gap-5 items-start p-[10px]">
@@ -425,15 +400,6 @@ function UserDashboard() {
               Suggested Food Items in {currentCity}
             </h1>
 
-            <div className="w-full max-w-6xl flex justify-center mb-4">
-              <button 
-                onClick={fetchAllItems}
-                className="bg-red-500 hover:bg-red-600 text-white px-6 py-2 rounded-lg font-semibold"
-              >
-                🔄 DEBUG: Fetch Items
-              </button>
-            </div>
-
             <div className='w-full h-auto flex flex-wrap gap-[20px] justify-center'>
               {updatedItemsList && updatedItemsList.length > 0 ? (
                 updatedItemsList.map((item, index) => (
@@ -442,9 +408,7 @@ function UserDashboard() {
               ) : (
                 <div className="text-center py-10 w-full">
                   <p className="text-gray-500 text-lg">
-                    {updatedItemsList === undefined ? 'Loading...' :
-                      updatedItemsList?.length === 0 ? `No food items found in ${currentCity}` :
-                        'No items available'}
+                    No food items available in {currentCity}
                   </p>
                 </div>
               )}
@@ -459,8 +423,8 @@ function UserDashboard() {
               {isAutoDetecting ? "Detecting your location..." : "Please set your location"}
             </h2>
             <p className="text-gray-500">
-              {isAutoDetecting
-                ? "We're finding the best shops near you..."
+              {isAutoDetecting 
+                ? "We're finding the best shops near you..." 
                 : "Set your location to discover amazing food options"}
             </p>
           </div>
