@@ -39,50 +39,26 @@ function UserDashboard() {
     });
   }, [itemsInMyCity, updatedItemsList, shopInMyCity]);
 
-  // Also modify your fetchAllItems to log the API response:
- const fetchAllItems = async () => {
-  try {
-    console.log('🟡 Fetching shops from /api/shop/all');
-    const response = await axios.get(`${serverUrl}/api/shop/all`);
-    console.log('🟢 API Response:', response.data);
-    
-    if (response.data && response.data.length > 0) {
-      console.log('🔍 DEBUG - Checking data structure:');
-      console.log('Shops:', response.data.length);
-      console.log('First shop items:', response.data[0].items);
-      console.log('First shop structure:', response.data[0]);
+  // Real-time items extraction when shops are available
+  useEffect(() => {
+    if (shopInMyCity && shopInMyCity.length > 0 && (!itemsInMyCity || itemsInMyCity.length === 0)) {
+      console.log('🔄 Real-time: Extracting items from available shops');
       
-      // Extract all items from all shops
-      const allItems = [];
-      response.data.forEach(shop => {
-        if (shop.items && Array.isArray(shop.items)) {
-          console.log(`🏪 Shop "${shop.name}" has ${shop.items.length} items`);
-          // Add shop information to each item
-          shop.items.forEach(item => {
-            allItems.push({
-              ...item,
-              shopId: shop._id,
-              shopName: shop.name,
-              shopImage: shop.image
-            });
-          });
-        }
-      });
+      const extractedItems = shopInMyCity.flatMap(shop => 
+        shop.items ? shop.items.map(item => ({
+          ...item,
+          shopId: shop._id,
+          shopName: shop.name,
+          shopImage: shop.image
+        })) : []
+      );
       
-      console.log('✅ Found total food items:', allItems.length);
-      console.log('📦 Items data sample:', allItems.slice(0, 3));
-      dispatch(setItemsInMyCity(allItems));
-    } else {
-      console.log('❌ No shops found in response');
-      dispatch(setItemsInMyCity([]));
+      if (extractedItems.length > 0) {
+        console.log('✅ Real-time: Extracted', extractedItems.length, 'items');
+        dispatch(setItemsInMyCity(extractedItems));
+      }
     }
-  } catch (error) {
-    console.error('❌ Error fetching shops:', error);
-    dispatch(setItemsInMyCity([]));
-  }
-};
-
-
+  }, [shopInMyCity, itemsInMyCity, dispatch]);
 
   // Add this debug useEffect
   useEffect(() => {
@@ -95,10 +71,6 @@ function UserDashboard() {
       console.log('First shop structure:', shopInMyCity[0]);
     }
   }, [shopInMyCity, itemsInMyCity]);
-
-  useEffect(() => {
-    fetchAllItems();
-  }, []);
 
   useEffect(() => {
     if (!currentCity) {
@@ -262,6 +234,15 @@ function UserDashboard() {
   return (
     <div className='w-screen min-h-screen flex flex-col gap-5 items-center overflow-y-auto'>
       <Nav />
+      
+      {/* Debug Component - Add this */}
+      <div className="fixed top-20 right-4 bg-black text-white p-3 rounded-lg text-xs z-50 shadow-lg">
+        <div className="font-bold mb-1">DEBUG STATE</div>
+        <div>Shops: {shopInMyCity?.length || 0}</div>
+        <div>Items in Redux: {itemsInMyCity?.length || 0}</div>
+        <div>Updated Items: {updatedItemsList?.length || 0}</div>
+      </div>
+
       <div className="flex flex-col items-center justify-center h-[80vh]">
         <video className="w-full h-full object-cover shadow-lg" controls autoPlay muted loop>
           <source src="/assets/video.mp4" type="video/mp4" />
@@ -382,18 +363,63 @@ function UserDashboard() {
         </div>
       </div>
 
+      {/* REPLACE THIS ENTIRE SECTION - This is the key fix */}
       <div className='w-full max-w-6xl flex flex-col gap-5 items-start p-[10px]'>
         <h1 className='text-gray-800 text-2xl sm:text-3xl'>Suggested Food Items {currentCity ? `in ${currentCity}` : ''}</h1>
+
         <div className='w-full h-auto flex flex-wrap gap-[20px] justify-center'>
-          {updatedItemsList && updatedItemsList.length > 0 ? (
-            updatedItemsList.map((item, index) => (
-              <FoodCard key={item._id || index} data={item} />
-            ))
-          ) : (
-            <div className="text-center py-10 w-full">
-              <p className="text-gray-500 text-lg">No food items available</p>
-            </div>
-          )}
+          {(() => {
+            // EMERGENCY FALLBACK SYSTEM
+            let itemsToDisplay = [];
+            
+            // Priority 1: Use updatedItemsList
+            if (updatedItemsList && updatedItemsList.length > 0) {
+              itemsToDisplay = updatedItemsList;
+              console.log('🎯 Using updatedItemsList:', itemsToDisplay.length);
+            } 
+            // Priority 2: Use itemsInMyCity from Redux
+            else if (itemsInMyCity && itemsInMyCity.length > 0) {
+              itemsToDisplay = itemsInMyCity;
+              console.log('🎯 Using itemsInMyCity:', itemsToDisplay.length);
+            }
+            // Priority 3: Extract from shops in real-time (EMERGENCY FALLBACK)
+            else if (shopInMyCity && shopInMyCity.length > 0) {
+              console.log('🚨 EMERGENCY: Extracting items from shops in real-time');
+              itemsToDisplay = shopInMyCity.flatMap(shop => 
+                shop.items ? shop.items.map(item => ({
+                  ...item,
+                  shopId: shop._id,
+                  shopName: shop.name,
+                  shopImage: shop.image
+                })) : []
+              );
+              console.log('🚨 EMERGENCY: Extracted', itemsToDisplay.length, 'items');
+              
+              // Also update Redux for future use
+              if (itemsToDisplay.length > 0) {
+                setTimeout(() => {
+                  dispatch(setItemsInMyCity(itemsToDisplay));
+                }, 0);
+              }
+            }
+            
+            // Render the items
+            if (itemsToDisplay.length > 0) {
+              return itemsToDisplay.map((item, index) => (
+                <FoodCard key={item._id || `item-${index}`} data={item} />
+              ));
+            } else {
+              return (
+                <div className="text-center py-10 w-full">
+                  <p className="text-gray-500 text-lg">No food items available</p>
+                  <div className="text-sm text-gray-400 mt-2">
+                    Shops: {shopInMyCity?.length || 0} | 
+                    Items in state: {itemsInMyCity?.length || 0}
+                  </div>
+                </div>
+              );
+            }
+          })()}
         </div>
       </div>
     </div>
