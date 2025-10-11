@@ -55,7 +55,7 @@ function FoodCard({ data }) {
   const isInCart = cartItems.some(item => item.id === data?._id);
 
   return (
-    <div className='w-full max-w-[160px] sm:max-w-[180px] rounded-xl border border-[#008e39] bg-white shadow-md overflow-hidden hover:shadow-lg transform hover:scale-102 transition-all duration-300 flex flex-col'>
+    <div className='w-full max-w-[200px] sm:max-w-[250px] rounded-xl border border-[#008e39] bg-white shadow-md overflow-hidden hover:shadow-lg transform hover:scale-102 transition-all duration-300 flex flex-col'>
       {/* Image Section */}
       <div className='relative w-full h-[100px] sm:h-[120px] flex justify-center items-center bg-white'>
         <div className='absolute top-1.5 right-1.5 bg-white rounded-full p-0.5 shadow'>
