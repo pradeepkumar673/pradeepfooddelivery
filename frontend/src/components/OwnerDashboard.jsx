@@ -30,6 +30,59 @@ function UserDashboard() {
   const [isEditingLocation, setIsEditingLocation] = useState(false)
   const [tempLocation, setTempLocation] = useState('')
 
+  // Fetch ALL items when component loads - NO LOCATION DEPENDENCY
+  const fetchAllItems = async () => {
+    try {
+      console.log('🟡 Fetching ALL items...');
+      
+      // Try different endpoints to get items
+      const endpoints = [
+        `${serverUrl}/api/items/all`,
+        `${serverUrl}/api/items/get-all-items`,
+        `${serverUrl}/api/shop/all`
+      ];
+      
+      for (const endpoint of endpoints) {
+        try {
+          const response = await axios.get(endpoint);
+          console.log('🟢 Response from', endpoint, ':', response.data);
+          
+          if (response.data.items) {
+            dispatch(setItemsInMyCity(response.data.items));
+            return;
+          } else if (Array.isArray(response.data)) {
+            // If it's an array of items
+            if (response.data.length > 0 && response.data[0].name) {
+              dispatch(setItemsInMyCity(response.data));
+              return;
+            }
+            // If it's an array of shops with items
+            else if (response.data.length > 0 && response.data[0].items) {
+              const allItems = response.data.flatMap(shop => shop.items || []);
+              dispatch(setItemsInMyCity(allItems));
+              return;
+            }
+          }
+        } catch (error) {
+          console.log(`🔴 ${endpoint} failed`);
+        }
+      }
+      
+      // If all endpoints fail
+      dispatch(setItemsInMyCity([]));
+      
+    } catch (error) {
+      console.error('❌ Error fetching items:', error);
+      dispatch(setItemsInMyCity([]));
+    }
+  };
+
+  // Fetch items on component mount - NO LOCATION NEEDED
+  useEffect(() => {
+    fetchAllItems();
+  }, []);
+
+  // Location detection
   useEffect(() => {
     if (!currentCity) {
       setShowLocationModal(true);
@@ -57,28 +110,6 @@ function UserDashboard() {
       setIsAutoDetecting(false);
     }
   };
-
-  const fetchItemsForCity = async () => {
-    if (currentCity) {
-      try {
-        const response = await axios.get(`${serverUrl}/api/items/get-by-city/${currentCity}`);
-        if (response.data && response.data.length > 0) {
-          dispatch(setItemsInMyCity(response.data));
-        } else {
-          dispatch(setItemsInMyCity([]));
-        }
-      } catch (error) {
-        console.error('Error fetching items:', error);
-        dispatch(setItemsInMyCity([]));
-      }
-    }
-  };
-
-  useEffect(() => {
-    if (currentCity) {
-      fetchItemsForCity();
-    }
-  }, [currentCity]);
 
   const handleFilterByCategory = (category) => {
     if (category == "All") {
@@ -345,77 +376,62 @@ function UserDashboard() {
         </div>
       )}
 
-      {currentCity ? (
-        <>
-          <div className="w-full max-w-6xl flex flex-col gap-5 items-start p-[10px]">
-            <h1 className='text-gray-800 text-2xl sm:text-3xl'>Inspiration for your first order</h1>
-            <div className='w-full relative'>
-              {showLeftCateButton && <button className='absolute left-0 top-1/2 -translate-y-1/2 bg-[#0A400C] text-white p-2 rounded-full shadow-lg hover:bg-[#819067] z-10' onClick={() => scrollHandler(cateScrollRef, "left")}><FaCircleChevronLeft />
-              </button>}
+      {/* ALWAYS SHOW CONTENT - NO LOCATION CHECK */}
+      <>
+        <div className="w-full max-w-6xl flex flex-col gap-5 items-start p-[10px]">
+          <h1 className='text-gray-800 text-2xl sm:text-3xl'>Inspiration for your first order</h1>
+          <div className='w-full relative'>
+            {showLeftCateButton && <button className='absolute left-0 top-1/2 -translate-y-1/2 bg-[#0A400C] text-white p-2 rounded-full shadow-lg hover:bg-[#819067] z-10' onClick={() => scrollHandler(cateScrollRef, "left")}><FaCircleChevronLeft />
+            </button>}
 
-              <div className='w-full flex overflow-x-auto gap-4 pb-2 ' ref={cateScrollRef}>
-                {categories.map((cate, index) => (
-                  <CategoryCard name={cate.category} image={cate.image} key={index} onClick={() => handleFilterByCategory(cate.category)} />
-                ))}
-              </div>
-              {showRightCateButton && <button className='absolute right-0 top-1/2 -translate-y-1/2 bg-[#0A400C] text-white p-2 rounded-full shadow-lg hover:bg-[#819067] z-10' onClick={() => scrollHandler(cateScrollRef, "right")}>
-                <FaCircleChevronRight />
-              </button>}
+            <div className='w-full flex overflow-x-auto gap-4 pb-2 ' ref={cateScrollRef}>
+              {categories.map((cate, index) => (
+                <CategoryCard name={cate.category} image={cate.image} key={index} onClick={() => handleFilterByCategory(cate.category)} />
+              ))}
             </div>
-          </div>
-
-          <div className='w-full max-w-6xl flex flex-col gap-5 items-start p-[10px]'>
-            <h1 className='text-gray-800 text-2xl sm:text-3xl'>Best Shop in {currentCity}</h1>
-            <div className='w-full relative'>
-              {showLeftShopButton && <button className='absolute left-0 top-1/2 -translate-y-1/2 bg-[#0A400C] text-white p-2 rounded-full shadow-lg hover:bg-[#819067] z-10' onClick={() => scrollHandler(shopScrollRef, "left")}><FaCircleChevronLeft />
-              </button>}
-
-              <div className='w-full flex overflow-x-auto gap-4 pb-2 ' ref={shopScrollRef}>
-                {shopInMyCity?.map((shop, index) => (
-                  <CategoryCard name={shop.name} image={shop.image} key={index} onClick={() => navigate(`/shop/${shop._id}`)} />
-                ))}
-              </div>
-              {showRightShopButton && <button className='absolute right-0 top-1/2 -translate-y-1/2 bg-[#0A400C] text-white p-2 rounded-full shadow-lg hover:bg-[#819067] z-10' onClick={() => scrollHandler(shopScrollRef, "right")}>
-                <FaCircleChevronRight />
-              </button>}
-            </div>
-          </div>
-
-          <div className='w-full max-w-6xl flex flex-col gap-5 items-start p-[10px]'>
-            <h1 className='text-gray-800 text-2xl sm:text-3xl'>
-              Suggested Food Items in {currentCity}
-            </h1>
-
-            <div className='w-full h-auto flex flex-wrap gap-[20px] justify-center'>
-              {updatedItemsList && updatedItemsList.length > 0 ? (
-                updatedItemsList.map((item, index) => (
-                  <FoodCard key={item._id || index} data={item} />
-                ))
-              ) : (
-                <div className="text-center py-10 w-full">
-                  <p className="text-gray-500 text-lg">
-                    No food items available in {currentCity}
-                  </p>
-                </div>
-              )}
-            </div>
-          </div>
-        </>
-      ) : (
-        <div className="w-full max-w-6xl flex flex-col items-center justify-center py-20">
-          <div className="text-center">
-            <div className="text-4xl mb-4">📍</div>
-            <h2 className="text-2xl font-semibold text-gray-700 mb-2">
-              {isAutoDetecting ? "Detecting your location..." : "Please set your location"}
-            </h2>
-            <p className="text-gray-500">
-              {isAutoDetecting
-                ? "We're finding the best shops near you..."
-                : "Set your location to discover amazing food options"}
-            </p>
+            {showRightCateButton && <button className='absolute right-0 top-1/2 -translate-y-1/2 bg-[#0A400C] text-white p-2 rounded-full shadow-lg hover:bg-[#819067] z-10' onClick={() => scrollHandler(cateScrollRef, "right")}>
+              <FaCircleChevronRight />
+            </button>}
           </div>
         </div>
-      )}
+
+        <div className='w-full max-w-6xl flex flex-col gap-5 items-start p-[10px]'>
+          <h1 className='text-gray-800 text-2xl sm:text-3xl'>Best Shop in {currentCity || 'Your Area'}</h1>
+          <div className='w-full relative'>
+            {showLeftShopButton && <button className='absolute left-0 top-1/2 -translate-y-1/2 bg-[#0A400C] text-white p-2 rounded-full shadow-lg hover:bg-[#819067] z-10' onClick={() => scrollHandler(shopScrollRef, "left")}><FaCircleChevronLeft />
+            </button>}
+
+            <div className='w-full flex overflow-x-auto gap-4 pb-2 ' ref={shopScrollRef}>
+              {shopInMyCity?.map((shop, index) => (
+                <CategoryCard name={shop.name} image={shop.image} key={index} onClick={() => navigate(`/shop/${shop._id}`)} />
+              ))}
+            </div>
+            {showRightShopButton && <button className='absolute right-0 top-1/2 -translate-y-1/2 bg-[#0A400C] text-white p-2 rounded-full shadow-lg hover:bg-[#819067] z-10' onClick={() => scrollHandler(shopScrollRef, "right")}>
+              <FaCircleChevronRight />
+            </button>}
+          </div>
+        </div>
+
+        <div className='w-full max-w-6xl flex flex-col gap-5 items-start p-[10px]'>
+          <h1 className='text-gray-800 text-2xl sm:text-3xl'>
+            Suggested Food Items {currentCity ? `in ${currentCity}` : ''}
+          </h1>
+
+          <div className='w-full h-auto flex flex-wrap gap-[20px] justify-center'>
+            {updatedItemsList && updatedItemsList.length > 0 ? (
+              updatedItemsList.map((item, index) => (
+                <FoodCard key={item._id || index} data={item} />
+              ))
+            ) : (
+              <div className="text-center py-10 w-full">
+                <p className="text-gray-500 text-lg">
+                  No food items available
+                </p>
+              </div>
+            )}
+          </div>
+        </div>
+      </>
     </div>
   )
 }
