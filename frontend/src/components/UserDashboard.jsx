@@ -31,41 +31,69 @@ function UserDashboard() {
   const [tempLocation, setTempLocation] = useState('')
 
   // Add this debug useEffect
-useEffect(() => {
-  console.log('🔍 DEBUG - Current State:', {
-    itemsInMyCity,
-    updatedItemsList,
-    shopInMyCity
-  });
-}, [itemsInMyCity, updatedItemsList, shopInMyCity]);
+  useEffect(() => {
+    console.log('🔍 DEBUG - Current State:', {
+      itemsInMyCity,
+      updatedItemsList,
+      shopInMyCity
+    });
+  }, [itemsInMyCity, updatedItemsList, shopInMyCity]);
 
-// Also modify your fetchAllItems to log the API response:
-const fetchAllItems = async () => {
-  try {
-    console.log('🟡 Fetching shops from /api/shop/all');
-    const response = await axios.get(`${serverUrl}/api/shop/all`);
-    console.log('🟢 API Response:', response.data);
-    
-    if (response.data && response.data.length > 0) {
-      console.log('🏪 First shop items:', response.data[0].items);
-      const allItems = [];
-      response.data.forEach(shop => {
-        if (shop.items && shop.items.length > 0) {
-          console.log(`Shop "${shop.name}" has ${shop.items.length} items`);
-          allItems.push(...shop.items);
-        }
-      });
-      console.log('📦 Total items found:', allItems.length);
-      dispatch(setItemsInMyCity(allItems));
-    } else {
-      console.log('❌ No shops found in response');
+  // Also modify your fetchAllItems to log the API response:
+  const fetchAllItems = async () => {
+    try {
+      console.log('🟡 Fetching shops from /api/shop/all');
+      const response = await axios.get(`${serverUrl}/api/shop/all`);
+      console.log('🟢 API Response:', response.data);
+
+      if (response.data && response.data.length > 0) {
+        console.log('🏪 First shop items:', response.data[0].items);
+        const allItems = [];
+        response.data.forEach(shop => {
+          if (shop.items && shop.items.length > 0) {
+            console.log(`Shop "${shop.name}" has ${shop.items.length} items`);
+            allItems.push(...shop.items);
+          }
+        });
+        console.log('📦 Total items found:', allItems.length);
+        dispatch(setItemsInMyCity(allItems));
+      } else {
+        console.log('❌ No shops found in response');
+        dispatch(setItemsInMyCity([]));
+      }
+    } catch (error) {
+      console.error('❌ Error fetching items:', error);
       dispatch(setItemsInMyCity([]));
     }
-  } catch (error) {
-    console.error('❌ Error fetching items:', error);
-    dispatch(setItemsInMyCity([]));
-  }
-};
+  };
+
+  // Add this useEffect to UserDashboard.jsx
+  useEffect(() => {
+    // If itemsInMyCity is empty but we have shops, extract items from shops
+    if ((!itemsInMyCity || itemsInMyCity.length === 0) && shopInMyCity && shopInMyCity.length > 0) {
+      console.log('🟡 Extracting items from shops...');
+      const allItemsFromShops = shopInMyCity.flatMap(shop =>
+        shop.items && Array.isArray(shop.items) ? shop.items : []
+      );
+      console.log('📦 Items from shops:', allItemsFromShops);
+
+      if (allItemsFromShops.length > 0) {
+        dispatch(setItemsInMyCity(allItemsFromShops));
+      }
+    }
+  }, [itemsInMyCity, shopInMyCity, dispatch]);
+
+  // Add this debug useEffect
+  useEffect(() => {
+    console.log('🔍 DEBUG - Checking data structure:');
+    console.log('Shops:', shopInMyCity);
+    console.log('Items:', itemsInMyCity);
+
+    if (shopInMyCity && shopInMyCity.length > 0) {
+      console.log('First shop items:', shopInMyCity[0].items);
+      console.log('First shop structure:', shopInMyCity[0]);
+    }
+  }, [shopInMyCity, itemsInMyCity]);
 
   useEffect(() => {
     fetchAllItems();
