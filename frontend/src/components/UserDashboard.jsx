@@ -10,7 +10,7 @@ import FoodCard from './FoodCard';
 import { useNavigate } from 'react-router-dom';
 import axios from 'axios';
 import { serverUrl } from '../App';
-import { setCurrentCity } from '../redux/userSlice';
+import { setCurrentCity, setItemsInMyCity } from '../redux/userSlice';
 
 function UserDashboard() {
   const { currentCity, shopInMyCity, itemsInMyCity, searchItems } = useSelector(state => state.user)
