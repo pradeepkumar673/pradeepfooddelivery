@@ -17,24 +17,29 @@ const app = express()
 const server = http.createServer(app)
 
 const allowedOrigins = [
-  process.env.FRONTEND_URL || "https://pradeepfooddelivery.onrender.com",
+  "https://pradeepfooddelivery.onrender.com",
   "http://localhost:5173",
   "http://127.0.0.1:5173"
 ]
 
+// CORS configuration - SIMPLIFIED
 const corsOptions = {
-  origin: function (origin, callback) {
-    if (!origin) return callback(null, true)
-    if (allowedOrigins.includes(origin)) return callback(null, true)
-    return callback(new Error("CORS vidala"))
-  },
+  origin: allowedOrigins,
   credentials: true,
   methods: ["GET", "POST", "PUT", "PATCH", "DELETE", "OPTIONS"],
   allowedHeaders: ["Content-Type", "Authorization", "X-Requested-With"],
 }
 
+// Apply CORS middleware FIRST
+app.use(cors(corsOptions))
+
+// Socket.io configuration - FIXED
 const io = new Server(server, {
-  cors: corsOptions,
+  cors: {
+    origin: allowedOrigins,
+    credentials: true,
+    methods: ["GET", "POST"]
+  },
   transports: ['websocket', 'polling'] 
 })
 
@@ -43,18 +48,31 @@ const port = process.env.PORT || 5000
 
 app.set("trust proxy", 1)
 
-app.use(cors(corsOptions))
-
+// Essential middleware
 app.use(express.json())
 app.use(cookieParser())
+
+// Routes
 app.use("/api/auth", authRouter)
 app.use("/api/user", userRouter)
 app.use("/api/shop", shopRouter)
 app.use("/api/item", itemRouter)
 app.use("/api/order", orderRouter)
 
+// Health check endpoint
+app.get("/health", (req, res) => {
+  res.status(200).json({ 
+    status: "OK", 
+    message: "Server is running",
+    timestamp: new Date().toISOString()
+  })
+})
+
+// Socket handler
 socketHandler(io)
+
+// Start server
 server.listen(port, () => {
   connectDb()
-  console.log(`server started at ${port}`)
+  console.log(`Server started at port ${port}`)
 })
