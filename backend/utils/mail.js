@@ -132,7 +132,7 @@ export const sendFoodAvailableNotificationToAll = async (shopName) => {
                         <p>Hello,</p>
                         <p>Ample food is available at <strong>${shopName}</strong>.</p>
                         <p>Visit now to claim your food!</p>
-                        <p>Best regards,<br>ViperUnit3</p>
+                        <p>Best regards,<br>lt.col.pradeep</p>
                     `
                 });
 
