@@ -30,25 +30,42 @@ function UserDashboard() {
   const [isEditingLocation, setIsEditingLocation] = useState(false)
   const [tempLocation, setTempLocation] = useState('')
 
-  const fetchAllItems = async () => {
-    try {
-      const response = await axios.get(`${serverUrl}/api/shop/all`);
-      if (response.data && response.data.length > 0) {
-        const allItems = [];
-        response.data.forEach(shop => {
-          if (shop.items && shop.items.length > 0) {
-            allItems.push(...shop.items);
-          }
-        });
-        dispatch(setItemsInMyCity(allItems));
-      } else {
-        dispatch(setItemsInMyCity([]));
-      }
-    } catch (error) {
-      console.error('Error fetching items:', error);
+  // Add this debug useEffect
+useEffect(() => {
+  console.log('🔍 DEBUG - Current State:', {
+    itemsInMyCity,
+    updatedItemsList,
+    shopInMyCity
+  });
+}, [itemsInMyCity, updatedItemsList, shopInMyCity]);
+
+// Also modify your fetchAllItems to log the API response:
+const fetchAllItems = async () => {
+  try {
+    console.log('🟡 Fetching shops from /api/shop/all');
+    const response = await axios.get(`${serverUrl}/api/shop/all`);
+    console.log('🟢 API Response:', response.data);
+    
+    if (response.data && response.data.length > 0) {
+      console.log('🏪 First shop items:', response.data[0].items);
+      const allItems = [];
+      response.data.forEach(shop => {
+        if (shop.items && shop.items.length > 0) {
+          console.log(`Shop "${shop.name}" has ${shop.items.length} items`);
+          allItems.push(...shop.items);
+        }
+      });
+      console.log('📦 Total items found:', allItems.length);
+      dispatch(setItemsInMyCity(allItems));
+    } else {
+      console.log('❌ No shops found in response');
       dispatch(setItemsInMyCity([]));
     }
-  };
+  } catch (error) {
+    console.error('❌ Error fetching items:', error);
+    dispatch(setItemsInMyCity([]));
+  }
+};
 
   useEffect(() => {
     fetchAllItems();
