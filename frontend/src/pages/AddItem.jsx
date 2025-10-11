@@ -14,7 +14,7 @@ function AddItem() {
     const { myShopData } = useSelector(state => state.owner)
     const [loading, setLoading] = useState(false)
     const [name, setName] = useState("")
-    const [price, setPrice] = useState("") // Changed to string for better handling
+    const [price, setPrice] = useState("") 
     const [expiry, setExpiry] = useState("")
     const [frontendImage, setFrontendImage] = useState(null)
     const [backendImage, setBackendImage] = useState(null)
@@ -32,7 +32,6 @@ function AddItem() {
     const handleImage = (e) => {
         const file = e.target.files[0]
         if (file) {
-            // Validate file type and size
             if (!file.type.startsWith('image/')) {
                 setError("Please select a valid image file")
                 return
@@ -89,13 +88,12 @@ function AddItem() {
             formData.append("expiry", expiry)
             formData.append("foodType", foodType)
             formData.append("notify", notify)
-            formData.append("price", parseFloat(price)) // Ensure it's a number
+            formData.append("price", parseFloat(price)) 
             
             if (backendImage) {
                 formData.append("image", backendImage)
             }
 
-            // Log the form data for debugging
             for (let [key, value] of formData.entries()) {
                 console.log(`${key}:`, value)
             }
@@ -116,17 +114,14 @@ function AddItem() {
             console.log("Full error:", error)
             
             if (error.response) {
-                // Server responded with error
                 console.log("Status:", error.response.status)
                 console.log("Response data:", error.response.data)
                 
                 if (error.response.status === 400) {
-                    // Handle validation errors from server
                     const errorData = error.response.data
                     if (errorData.message) {
                         setError(errorData.message)
                     } else if (errorData.errors) {
-                        // If there are multiple validation errors
                         const errorMessages = Object.values(errorData.errors).join(', ')
                         setError(errorMessages)
                     } else {
@@ -141,11 +136,9 @@ function AddItem() {
                     setError("Something went wrong. Please try again.")
                 }
             } else if (error.request) {
-                // Network error
                 console.log("Network error:", error.request)
                 setError("Network error. Please check your connection.")
             } else {
-                // Other errors
                 console.log("Error:", error.message)
                 setError("An error occurred. Please try again.")
             }
@@ -168,7 +161,6 @@ function AddItem() {
                     </div>
                 </div>
                 
-                {/* Error Message */}
                 {error && (
                     <div className='mb-4 p-3 bg-red-100 border border-red-400 text-red-700 rounded-lg'>
                         {error}

@@ -4,7 +4,7 @@ import { closeOtpModal, setOtpError } from '../redux/userSlice';
 
 const OtpVerificationModal = ({ email, onVerify }) => {
   const [otp, setOtp] = useState('');
-  const [timer, setTimer] = useState(300); // 5 minutes in seconds
+  const [timer, setTimer] = useState(300); 
   const [resendDisabled, setResendDisabled] = useState(false);
   const dispatch = useDispatch();
   
