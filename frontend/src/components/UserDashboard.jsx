@@ -64,70 +64,53 @@ useEffect(() => {
 };
   const fetchAllItems = async () => {
   try {
-    console.log('🟡 Fetching REAL food items from database...');
+    console.log('🟡 Fetching items...');
     
-    let allItems = [];
+    // Try multiple endpoints
+    const endpoints = [
+      `${serverUrl}/api/items/get-all-items`,
+      `${serverUrl}/api/items/all`,
+      `${serverUrl}/api/items/get-by-city/${currentCity}`,
+      `${serverUrl}/api/shop/all`
+    ];
     
-    // METHOD 1: Try to get all shops and extract their items
-    try {
-      console.log('🟡 Trying to get shops first...');
-      const shopsResponse = await axios.get(`${serverUrl}/api/shop/all`);
-      console.log('🏪 Shops found:', shopsResponse.data?.length);
-      
-      if (shopsResponse.data && shopsResponse.data.length > 0) {
-        // Extract items from all shops
-        shopsResponse.data.forEach(shop => {
-          if (shop.items && shop.items.length > 0) {
-            // Add shop info to each item
-            const itemsWithShopInfo = shop.items.map(item => ({
-              ...item,
-              shop: {
-                _id: shop._id,
-                name: shop.name,
-                city: shop.city,
-                image: shop.image
-              }
-            }));
-            allItems = [...allItems, ...itemsWithShopInfo];
+    for (const endpoint of endpoints) {
+      try {
+        console.log(`🟡 Trying: ${endpoint}`);
+        const response = await axios.get(endpoint);
+        console.log('🟢 Response:', response.data);
+        
+        // Handle different response formats
+        if (response.data.items) {
+          dispatch(setItemsInMyCity(response.data.items));
+          return;
+        } else if (Array.isArray(response.data)) {
+          // If it's an array of items
+          if (response.data.length > 0 && response.data[0].name) {
+            dispatch(setItemsInMyCity(response.data));
+            return;
           }
-        });
-        console.log('🟢 Items extracted from shops:', allItems.length);
-      }
-    } catch (shopError) {
-      console.log('🔴 Could not fetch shops:', shopError.message);
-    }
-    
-    // METHOD 2: If no items from shops, try direct items endpoint
-    if (allItems.length === 0) {
-      try {
-        console.log('🟡 Trying direct items endpoint...');
-        const itemsResponse = await axios.get(`${serverUrl}/api/items/all`);
-        if (itemsResponse.data && itemsResponse.data.items) {
-          allItems = itemsResponse.data.items;
-          console.log('🟢 Items from direct endpoint:', allItems.length);
+          // If it's an array of shops with items
+          else if (response.data.length > 0 && response.data[0].items) {
+            const allItems = response.data.flatMap(shop => shop.items || []);
+            dispatch(setItemsInMyCity(allItems));
+            return;
+          }
         }
-      } catch (itemError) {
-        console.log('🔴 Direct items endpoint failed');
+      } catch (error) {
+        console.log(`🔴 ${endpoint} failed:`, error.message);
       }
     }
     
-    // METHOD 3: Last resort - get shops by city and their items
-    if (allItems.length === 0 && currentCity) {
-      try {
-        console.log('🟡 Trying city-specific shops...');
-        const cityShopsResponse = await axios.get(`${serverUrl}/api/shop/city/${currentCity}`);
-        if (cityShopsResponse.data && cityShopsResponse.data.length > 0) {
-          cityShopsResponse.data.forEach(shop => {
-            if (shop.items && shop.items.length > 0) {
-              allItems = [...allItems, ...shop.items];
-            }
-          });
-          console.log('🟢 Items from city shops:', allItems.length);
-        }
-      } catch (cityError) {
-        console.log('🔴 City shops endpoint failed');
-      }
-    }
+    // If all endpoints fail
+    console.log('❌ All endpoints failed');
+    dispatch(setItemsInMyCity([]));
+    
+  } catch (error) {
+    console.error('❌ Error fetching items:', error);
+    dispatch(setItemsInMyCity([]));
+  }
+};
     
     console.log('🟢 FINAL REAL ITEMS FOUND:', allItems.length);
     
@@ -459,7 +442,15 @@ useEffect(() => {
             {/* DEBUG: Add this to see what's happening */}
             {console.log('DEBUG updatedItemsList:', updatedItemsList)}
             {console.log('DEBUG itemsInMyCity:', itemsInMyCity)}
-
+{/* ADD THIS BUTTON */}
+<div className="w-full max-w-6xl flex justify-center mb-4">
+  <button 
+    onClick={fetchAllItems}
+    className="bg-red-500 hover:bg-red-600 text-white px-6 py-2 rounded-lg font-semibold"
+  >
+    🔄 DEBUG: Fetch Items
+  </button>
+</div>
             <div className='w-full h-auto flex flex-wrap gap-[20px] justify-center'>
               {updatedItemsList && updatedItemsList.length > 0 ? (
                 updatedItemsList.map((item, index) => (
