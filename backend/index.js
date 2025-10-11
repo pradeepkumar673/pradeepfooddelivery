@@ -33,7 +33,10 @@ const corsOptions = {
   allowedHeaders: ["Content-Type", "Authorization", "X-Requested-With"],
 }
 
-const io = new Server(server, { cors: corsOptions })
+const io = new Server(server, {
+  cors: corsOptions,
+  transports: ['websocket', 'polling'] 
+})
 
 app.set("io", io)
 const port = process.env.PORT || 5000
