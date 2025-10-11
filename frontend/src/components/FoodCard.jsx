@@ -1,192 +1,124 @@
-import React, { useEffect, useState } from 'react';
+import React, { useState } from 'react'
+import { FaLeaf, FaDrumstickBite, FaStar, FaRegStar, FaMinus, FaPlus, FaShoppingCart } from "react-icons/fa";
 import { useDispatch, useSelector } from 'react-redux';
-import FoodCard from './FoodCard';
+import { addToCart } from '../redux/userSlice';
 
-function FoodList() {
+function FoodCard({ data }) {
+  const [quantity, setQuantity] = useState(0);
   const dispatch = useDispatch();
-  const { itemsInMyCity, shopInMyCity } = useSelector(state => state.yourReducer);
-  const [loading, setLoading] = useState(false);
-  const [error, setError] = useState('');
-
-  // Fetch food items when shops are loaded
-  useEffect(() => {
-    const fetchFoodItems = async () => {
-      setLoading(true);
-      setError('');
-      
-      try {
-        console.log('🟡 Starting to fetch food items...');
-        console.log('🛍️ Available shops:', shopInMyCity.length);
-        
-        // Since /api/items/all returns 404, we need to fetch items differently
-        // Option 1: Try to get items from each shop's items array
-        const allItemIds = [];
-        
-        // Collect all item IDs from all shops
-        shopInMyCity.forEach(shop => {
-          if (shop.items && Array.isArray(shop.items)) {
-            allItemIds.push(...shop.items);
-          }
-        });
-
-        console.log('📦 Item IDs found in shops:', allItemIds);
-
-        if (allItemIds.length === 0) {
-          setError('No food items found in the shops');
-          setLoading(false);
-          return;
-        }
-
-        // Fetch each item individually
-        console.log('🟡 Fetching individual items...');
-        
-        const itemPromises = allItemIds.map(async (itemId) => {
-          try {
-            // Try different endpoints for individual items
-            const endpoints = [
-              `https://pradeepfooddelivery-backend-wam8.onrender.com/api/items/${itemId}`,
-              `https://pradeepfooddelivery-backend-wam8.onrender.com/api/food/${itemId}`,
-              `https://pradeepfooddelivery-backend-wam8.onrender.com/api/item/${itemId}`,
-              `/api/items/${itemId}`,
-              `/api/food/${itemId}`,
-              `/api/item/${itemId}`
-            ];
-
-            for (const endpoint of endpoints) {
-              try {
-                const response = await fetch(endpoint);
-                if (response.ok) {
-                  const itemData = await response.json();
-                  console.log(`✅ Fetched item ${itemId}:`, itemData.name);
-                  return itemData;
-                }
-              } catch (err) {
-                continue; // Try next endpoint
-              }
-            }
-            console.warn(`❌ Could not fetch item ${itemId}`);
-            return null;
-          } catch (error) {
-            console.error(`Error fetching item ${itemId}:`, error);
-            return null;
-          }
-        });
-
-        const allItems = await Promise.all(itemPromises);
-        const validItems = allItems.filter(item => item !== null);
-        
-        console.log('✅ Successfully fetched items:', validItems.length);
-        console.log('🍕 Items data:', validItems);
-
-        // Dispatch to store
-        dispatch({ type: 'SET_ITEMS_IN_MY_CITY', payload: validItems });
-        
-      } catch (error) {
-        console.error('❌ Error fetching food items:', error);
-        setError('Failed to load food items. Please try again.');
-      } finally {
-        setLoading(false);
-      }
-    };
-
-    if (shopInMyCity && shopInMyCity.length > 0) {
-      console.log('🟡 Shops available, fetching items...');
-      fetchFoodItems();
-    } else {
-      console.log('🟡 No shops available yet');
+  
+  // SAFELY get cartItems from Redux
+  const cartItems = useSelector(state => state.user?.cartItems || []);
+  
+  const renderStars = (rating) => {
+    const stars = [];
+    const actualRating = rating || 0;
+    
+    for (let i = 1; i <= 5; i++) {
+      stars.push(
+        (i <= actualRating) ? (
+          <FaStar key={i} className='text-yellow-500 text-lg'/>
+        ) : (
+          <FaRegStar key={i} className='text-yellow-500 text-lg'/>
+        )
+      );
     }
-  }, [shopInMyCity, dispatch]);
+    return stars;
+  };
 
-  // If you're still having issues, try this SIMPLE version:
-  const fetchSimple = async () => {
-    try {
-      // Test if ANY items endpoint works
-      const testResponse = await fetch('https://pradeepfooddelivery-backend-wam8.onrender.com/api/items');
-      if (testResponse.ok) {
-        const items = await testResponse.json();
-        dispatch({ type: 'SET_ITEMS_IN_MY_CITY', payload: items });
-      } else {
-        console.log('❌ /api/items also failed');
-      }
-    } catch (err) {
-      console.log('❌ All endpoints failed');
+  const handleIncrease = () => {
+    setQuantity(quantity + 1);
+  };
+
+  const handleDecrease = () => {
+    if (quantity > 0) {
+      setQuantity(quantity - 1);
     }
   };
 
-  // Debug info
-  console.log('🔍 CURRENT STATE:', {
-    shops: shopInMyCity?.length || 0,
-    items: itemsInMyCity?.length || 0,
-    loading,
-    error
-  });
+  const handleAddToCart = () => {
+    if (quantity > 0 && data) {
+      dispatch(addToCart({
+        id: data._id,
+        name: data.name,
+        price: data.price,
+        expiry: data.expiry,
+        image: data.image,
+        shop: data.shop,
+        quantity: quantity,
+        foodType: data.foodType
+      }));
+    }
+  };
+
+  // Check if item is already in cart
+  const isInCart = cartItems.some(item => item.id === data?._id);
 
   return (
-    <div className="p-4">
-      {/* Debug Info */}
-      <div className="mb-4 p-3 bg-blue-50 rounded-lg">
-        <div className="text-sm text-blue-800">
-          <strong>Debug Info:</strong> Shops: {shopInMyCity?.length || 0} | 
-          Items: {itemsInMyCity?.length || 0} |
-          Loading: {loading ? 'Yes' : 'No'}
+    <div className='w-[250px] rounded-2xl border-2 border-[#ff4d2d] bg-white shadow-md overflow-hidden hover:shadow-xl transition-all duration-300 flex flex-col'>
+      {/* Image Section */}
+      <div className='relative w-full h-[170px] flex justify-center items-center bg-white'>
+        <div className='absolute top-3 right-3 bg-white rounded-full p-1 shadow'>
+          {data.foodType === "veg" ? 
+            <FaLeaf className='text-green-600 text-lg'/> : 
+            <FaDrumstickBite className='text-red-600 text-lg'/>
+          }
         </div>
-        {error && (
-          <div className="text-red-600 text-sm mt-2">
-            Error: {error}
-          </div>
-        )}
+        <img 
+          src={data.image} 
+          alt={data.name} 
+          className='w-full h-full object-cover transition-transform duration-300 hover:scale-105'
+        />
       </div>
 
-      {/* Manual Refresh Button */}
-      <button 
-        onClick={() => window.location.reload()}
-        className="mb-4 bg-orange-500 text-white px-4 py-2 rounded-lg hover:bg-orange-600"
-      >
-        Refresh Page
-      </button>
+      {/* Content Section */}
+      <div className="flex-1 flex flex-col p-4">
+        <h1 className='font-semibold text-gray-900 text-base truncate'>{data.name}</h1>
+        
+        <p className='text-xs text-gray-500 truncate'>
+          {data.foodType === "veg" ? "(Veg)" : "(Non-Veg)"}
+          <br/>
+          Expires at {data.expiry}
+        </p>
 
-      {/* Food Items Grid */}
-      {loading && (
-        <div className="text-center py-8">
-          <div className="text-lg">Loading food items...</div>
+        <div className='flex items-center gap-1 mt-1'>
+          {renderStars(data.rating?.average || 0)}
+          <span className='text-xs text-gray-500'>
+            {data.rating?.count || 0}
+          </span>
         </div>
-      )}
+      </div>
 
-      {error && !loading && (
-        <div className="text-center py-8">
-          <div className="text-red-600 text-lg mb-4">{error}</div>
+      {/* Footer Section */}
+      <div className='flex items-center justify-between mt-auto p-3'>
+        <span className='font-bold text-gray-900 text-lg'>
+          ₹{data.price}
+        </span>
+
+        <div className='flex items-center border rounded-full overflow-hidden shadow-sm'>
           <button 
-            onClick={() => window.location.reload()}
-            className="bg-blue-500 text-white px-6 py-2 rounded-lg hover:bg-blue-600"
+            className='px-2 py-1 hover:bg-gray-100 transition' 
+            onClick={handleDecrease}
           >
-            Retry
+            <FaMinus size={12}/>
+          </button>
+          <span className='px-2 min-w-[20px] text-center'>{quantity}</span>
+          <button 
+            className='px-2 py-1 hover:bg-gray-100 transition' 
+            onClick={handleIncrease}
+          >
+            <FaPlus size={12}/>
+          </button>
+          <button 
+            className={`${isInCart ? "bg-gray-800" : "bg-[#ff4d2d]"} text-white px-3 py-2 transition-colors`}
+            onClick={handleAddToCart}
+          >
+            <FaShoppingCart size={16}/>
           </button>
         </div>
-      )}
-
-      <div className="flex flex-wrap gap-4 justify-center">
-        {itemsInMyCity && itemsInMyCity.length > 0 ? (
-          itemsInMyCity.map(item => (
-            <FoodCard key={item._id} data={item} />
-          ))
-        ) : (
-          !loading && (
-            <div className="text-center w-full py-8">
-              <p className="text-gray-500 text-lg">
-                {shopInMyCity?.length > 0 
-                  ? 'No food items found in your area shops.' 
-                  : 'No shops found in your area.'
-                }
-              </p>
-              <div className="mt-4 text-sm text-gray-400">
-                Check if your backend has the /api/items endpoint
-              </div>
-            </div>
-          )
-        )}
       </div>
     </div>
   );
 }
 
-export default FoodList;
+export default FoodCard;
