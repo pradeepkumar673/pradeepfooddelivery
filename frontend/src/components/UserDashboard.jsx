@@ -30,103 +30,56 @@ function UserDashboard() {
   const [isEditingLocation, setIsEditingLocation] = useState(false)
   const [tempLocation, setTempLocation] = useState('')
 
-useEffect(() => {
-  if (!currentCity) {
-    setShowLocationModal(true);
-    const timer = setTimeout(() => {
-      autoDetectLocation();
-    }, 2000);
-    return () => clearTimeout(timer);
-  } else {
-    console.log('🟡 City is set, fetching all items...');
-    fetchAllItems();
-  }
-}, [currentCity]);
-
-  const autoDetectLocation = async () => {
-  setIsAutoDetecting(true);
-  try {
-    const response = await axios.get('https://ipapi.co/json/');
-    const { city, country } = response.data;
-      
-    if (city) {
-      dispatch(setCurrentCity(city));
-    }
-    fetchAllItems();
-    setShowLocationModal(false);
-  } catch (error) {
-    console.error('Error auto-detecting location:', error);
-    fetchAllItems();
-    setShowLocationModal(false);
-  } finally {
-    setIsAutoDetecting(false);
-  }
-};
- const fetchAllItems = async () => {
-  try {
-    console.log('🟡 Fetching items...');
-    
-    // Try multiple endpoints
-    const endpoints = [
-      `${serverUrl}/api/items/get-all-items`,
-      `${serverUrl}/api/items/all`,
-      `${serverUrl}/api/items/get-by-city/${currentCity}`,
-      `${serverUrl}/api/shop/all`
-    ];
-    
-    for (const endpoint of endpoints) {
-      try {
-        console.log(`🟡 Trying: ${endpoint}`);
-        const response = await axios.get(endpoint);
-        console.log('🟢 Response:', response.data);
-        
-        // Handle different response formats
-        if (response.data.items) {
-          dispatch(setItemsInMyCity(response.data.items));
-          return;
-        } else if (Array.isArray(response.data)) {
-          // If it's an array of items
-          if (response.data.length > 0 && response.data[0].name) {
-            dispatch(setItemsInMyCity(response.data));
-            return;
+  const fetchAllItems = async () => {
+    try {
+      const response = await axios.get(`${serverUrl}/api/shop/all`);
+      if (response.data && response.data.length > 0) {
+        const allItems = [];
+        response.data.forEach(shop => {
+          if (shop.items && shop.items.length > 0) {
+            allItems.push(...shop.items);
           }
-          // If it's an array of shops with items
-          else if (response.data.length > 0 && response.data[0].items) {
-            const allItems = response.data.flatMap(shop => shop.items || []);
-            dispatch(setItemsInMyCity(allItems));
-            return;
-          }
-        }
-      } catch (error) {
-        console.log(`🔴 ${endpoint} failed:`, error.message);
+        });
+        dispatch(setItemsInMyCity(allItems));
+      } else {
+        dispatch(setItemsInMyCity([]));
       }
-    }
-    
-    // If all endpoints fail
-    console.log('❌ All endpoints failed');
-    dispatch(setItemsInMyCity([]));
-    
-  } catch (error) {
-    console.error('❌ Error fetching items:', error);
-    dispatch(setItemsInMyCity([]));
-  }
-};
-    
-    console.log('🟢 FINAL REAL ITEMS FOUND:', allItems.length);
-    
-    if (allItems.length > 0) {
-      dispatch(setItemsInMyCity(allItems));
-    } else {
-      console.log('🔴 NO ITEMS FOUND IN DATABASE');
-      // Show empty state but don't use sample data
+    } catch (error) {
+      console.error('Error fetching items:', error);
       dispatch(setItemsInMyCity([]));
     }
-    
-  } catch (error) {
-    console.error('❌ Error fetching real items:', error);
-    dispatch(setItemsInMyCity([]));
-  }
-};
+  };
+
+  useEffect(() => {
+    fetchAllItems();
+  }, []);
+
+  useEffect(() => {
+    if (!currentCity) {
+      setShowLocationModal(true);
+      const timer = setTimeout(() => {
+        autoDetectLocation();
+      }, 2000);
+      return () => clearTimeout(timer);
+    }
+  }, [currentCity]);
+
+  const autoDetectLocation = async () => {
+    setIsAutoDetecting(true);
+    try {
+      const response = await axios.get('https://ipapi.co/json/');
+      const { city, country } = response.data;
+      if (city) {
+        dispatch(setCurrentCity(city));
+      }
+      setShowLocationModal(false);
+    } catch (error) {
+      console.error('Error auto-detecting location:', error);
+      setShowLocationModal(false);
+    } finally {
+      setIsAutoDetecting(false);
+    }
+  };
 
   const handleFilterByCategory = (category) => {
     if (category == "All") {
@@ -138,14 +91,8 @@ useEffect(() => {
   }
 
   useEffect(() => {
-    console.log('🟡 Setting updatedItemsList from itemsInMyCity:', itemsInMyCity);
-    setUpdatedItemsList(itemsInMyCity);
-
-    if (!itemsInMyCity || itemsInMyCity.length === 0) {
-      console.log('🟡 No items found, fetching all items...');
-      fetchAllItems();
-    }
-  }, [itemsInMyCity]);
+    setUpdatedItemsList(itemsInMyCity)
+  }, [itemsInMyCity])
 
   const updateButton = (ref, setLeftButton, setRightButton) => {
     const element = ref.current
@@ -167,7 +114,6 @@ useEffect(() => {
   const handleLocationSubmit = async (e) => {
     e.preventDefault()
     if (!locationInput.trim()) return
-
     setIsLoading(true)
     try {
       dispatch(setCurrentCity(locationInput.trim()))
@@ -190,7 +136,6 @@ useEffect(() => {
       setShowLocationModal(true)
       return
     }
-
     setIsEditingLocation(true)
     setTempLocation(currentCity)
   }
@@ -258,7 +203,6 @@ useEffect(() => {
         updateButton(shopScrollRef, setShowLeftShopButton, setShowRightShopButton)
       })
     }
-
     return () => {
       cateScrollRef?.current?.removeEventListener("scroll", () => {
         updateButton(cateScrollRef, setShowLeftCateButton, setShowRightCateButton)
@@ -275,13 +219,11 @@ useEffect(() => {
       <div className="flex flex-col items-center justify-center h-[80vh]">
         <video className="w-full h-full object-cover shadow-lg" controls autoPlay muted loop>
           <source src="/assets/video.mp4" type="video/mp4" />
-          Your browser does not support the video tag.
         </video>
       </div>
 
       <div className="w-full max-w-6xl flex justify-between items-center p-4">
         <div></div>
-
         <div className="flex items-center gap-3">
           {isEditingLocation ? (
             <div className="flex items-center gap-2 bg-white border border-[#B1AB86] rounded-full px-4 py-2 shadow-md">
@@ -295,34 +237,22 @@ useEffect(() => {
                 autoFocus
               />
               <div className="flex gap-1">
-                <button
-                  onClick={handleLocationSave}
-                  className="text-green-500 hover:text-green-600 p-1"
-                  disabled={!tempLocation.trim()}
-                >
+                <button onClick={handleLocationSave} className="text-green-500 hover:text-green-600 p-1" disabled={!tempLocation.trim()}>
                   <FaCheck />
                 </button>
-                <button
-                  onClick={handleLocationCancel}
-                  className="text-red-500 hover:text-red-600 p-1"
-                >
+                <button onClick={handleLocationCancel} className="text-red-500 hover:text-red-600 p-1">
                   <FaTimes />
                 </button>
               </div>
             </div>
           ) : (
-            <button
-              onClick={handleLocationIconClick}
-              className="flex items-center gap-2 bg-white text-gray-700 px-4 py-2 rounded-full shadow-md hover:shadow-lg transition-shadow group"
-            >
+            <button onClick={handleLocationIconClick} className="flex items-center gap-2 bg-white text-gray-700 px-4 py-2 rounded-full shadow-md hover:shadow-lg transition-shadow group">
               <div className="relative">
                 <FaMapMarkerAlt className="text-[#0A400C] group-hover:scale-110 transition-transform" />
                 <FaEdit className="absolute -top-1 -right-1 text-xs text-blue-500 opacity-0 group-hover:opacity-100 transition-opacity" />
               </div>
               <span className="font-medium">{currentCity || 'Set Location'}</span>
-              <span className="text-blue-500 text-sm opacity-0 group-hover:opacity-100 transition-opacity">
-                Edit
-              </span>
+              <span className="text-blue-500 text-sm opacity-0 group-hover:opacity-100 transition-opacity">Edit</span>
             </button>
           )}
         </div>
@@ -335,13 +265,9 @@ useEffect(() => {
               <FaMapMarkerAlt className="text-[#0A400C] text-2xl" />
               <h2 className="text-2xl font-bold">Set Your Location</h2>
             </div>
-
             <p className="text-gray-600 mb-6">
-              {isAutoDetecting
-                ? "Detecting your location..."
-                : "Please set your location to see relevant shops and food items"}
+              {isAutoDetecting ? "Detecting your location..." : "Please set your location to see relevant shops and food items"}
             </p>
-
             <form onSubmit={handleLocationSubmit} className="mb-4">
               <div className="relative">
                 <input
@@ -354,30 +280,17 @@ useEffect(() => {
                 />
                 <FaMapMarkerAlt className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400" />
               </div>
-              <button
-                type="submit"
-                disabled={!locationInput.trim() || isLoading}
-                className="w-full bg-[#0A400C] text-white p-3 rounded-lg hover:bg-[#819067] disabled:bg-gray-300 transition-colors"
-              >
+              <button type="submit" disabled={!locationInput.trim() || isLoading} className="w-full bg-[#0A400C] text-white p-3 rounded-lg hover:bg-[#819067] disabled:bg-gray-300 transition-colors">
                 {isLoading ? 'Setting Location...' : 'Set Location'}
               </button>
             </form>
-
             <div className="flex gap-3">
-              <button
-                onClick={handleUseCurrentLocation}
-                disabled={isAutoDetecting}
-                className="flex-1 bg-blue-500 text-white p-3 rounded-lg hover:bg-blue-600 disabled:bg-gray-300 transition-colors flex items-center justify-center gap-2"
-              >
+              <button onClick={handleUseCurrentLocation} disabled={isAutoDetecting} className="flex-1 bg-blue-500 text-white p-3 rounded-lg hover:bg-blue-600 disabled:bg-gray-300 transition-colors flex items-center justify-center gap-2">
                 <FaMapMarkerAlt />
                 {isAutoDetecting ? 'Detecting...' : 'Current Location'}
               </button>
-
               {isAutoDetecting && (
-                <button
-                  onClick={() => setIsAutoDetecting(false)}
-                  className="flex-1 bg-gray-500 text-white p-3 rounded-lg hover:bg-gray-600 transition-colors"
-                >
+                <button onClick={() => setIsAutoDetecting(false)} className="flex-1 bg-gray-500 text-white p-3 rounded-lg hover:bg-gray-600 transition-colors">
                   Cancel
                 </button>
               )}
@@ -388,9 +301,7 @@ useEffect(() => {
 
       {searchItems && searchItems.length > 0 && (
         <div className='w-full max-w-6xl flex flex-col gap-5 items-start p-5 bg-white shadow-md rounded-2xl mt-4'>
-          <h1 className='text-gray-900 text-2xl sm:text-3xl font-semibold border-b border-gray-200 pb-2'>
-            Search Results
-          </h1>
+          <h1 className='text-gray-900 text-2xl sm:text-3xl font-semibold border-b border-gray-200 pb-2'>Search Results</h1>
           <div className='w-full h-auto flex flex-wrap gap-6 justify-center'>
             {searchItems.map((item) => (
               <FoodCard data={item} key={item._id} />
@@ -399,94 +310,46 @@ useEffect(() => {
         </div>
       )}
 
-      {currentCity ? (
-        <>
-          <div className="w-full max-w-6xl flex flex-col gap-5 items-start p-[10px]">
-            <h1 className='text-gray-800 text-2xl sm:text-3xl'>Inspiration for your first order</h1>
-            <div className='w-full relative'>
-              {showLeftCateButton && <button className='absolute left-0 top-1/2 -translate-y-1/2 bg-[#0A400C] text-white p-2 rounded-full shadow-lg hover:bg-[#819067] z-10' onClick={() => scrollHandler(cateScrollRef, "left")}><FaCircleChevronLeft />
-              </button>}
-
-              <div className='w-full flex overflow-x-auto gap-4 pb-2 ' ref={cateScrollRef}>
-                {categories.map((cate, index) => (
-                  <CategoryCard name={cate.category} image={cate.image} key={index} onClick={() => handleFilterByCategory(cate.category)} />
-                ))}
-              </div>
-              {showRightCateButton && <button className='absolute right-0 top-1/2 -translate-y-1/2 bg-[#0A400C] text-white p-2 rounded-full shadow-lg hover:bg-[#819067] z-10' onClick={() => scrollHandler(cateScrollRef, "right")}>
-                <FaCircleChevronRight />
-              </button>}
-            </div>
+      <div className="w-full max-w-6xl flex flex-col gap-5 items-start p-[10px]">
+        <h1 className='text-gray-800 text-2xl sm:text-3xl'>Inspiration for your first order</h1>
+        <div className='w-full relative'>
+          {showLeftCateButton && <button className='absolute left-0 top-1/2 -translate-y-1/2 bg-[#0A400C] text-white p-2 rounded-full shadow-lg hover:bg-[#819067] z-10' onClick={() => scrollHandler(cateScrollRef, "left")}><FaCircleChevronLeft /></button>}
+          <div className='w-full flex overflow-x-auto gap-4 pb-2 ' ref={cateScrollRef}>
+            {categories.map((cate, index) => (
+              <CategoryCard name={cate.category} image={cate.image} key={index} onClick={() => handleFilterByCategory(cate.category)} />
+            ))}
           </div>
-
-          <div className='w-full max-w-6xl flex flex-col gap-5 items-start p-[10px]'>
-            <h1 className='text-gray-800 text-2xl sm:text-3xl'>Best Shop in {currentCity}</h1>
-            <div className='w-full relative'>
-              {showLeftShopButton && <button className='absolute left-0 top-1/2 -translate-y-1/2 bg-[#0A400C] text-white p-2 rounded-full shadow-lg hover:bg-[#819067] z-10' onClick={() => scrollHandler(shopScrollRef, "left")}><FaCircleChevronLeft />
-              </button>}
-
-              <div className='w-full flex overflow-x-auto gap-4 pb-2 ' ref={shopScrollRef}>
-                {shopInMyCity?.map((shop, index) => (
-                  <CategoryCard name={shop.name} image={shop.image} key={index} onClick={() => navigate(`/shop/${shop._id}`)} />
-                ))}
-              </div>
-              {showRightShopButton && <button className='absolute right-0 top-1/2 -translate-y-1/2 bg-[#0A400C] text-white p-2 rounded-full shadow-lg hover:bg-[#819067] z-10' onClick={() => scrollHandler(shopScrollRef, "right")}>
-                <FaCircleChevronRight />
-              </button>}
-            </div>
-          </div>
-          <div className='w-full max-w-6xl flex flex-col gap-5 items-start p-[10px]'>
-            <h1 className='text-gray-800 text-2xl sm:text-3xl'>
-              Suggested Food Items in {currentCity}
-            </h1>
-
-            {/* DEBUG: Add this to see what's happening */}
-            {console.log('DEBUG updatedItemsList:', updatedItemsList)}
-            {console.log('DEBUG itemsInMyCity:', itemsInMyCity)}
-{/* ADD THIS BUTTON */}
-<div className="w-full max-w-6xl flex justify-center mb-4">
-  <button 
-    onClick={fetchAllItems}
-    className="bg-red-500 hover:bg-red-600 text-white px-6 py-2 rounded-lg font-semibold"
-  >
-    🔄 DEBUG: Fetch Items
-  </button>
-</div>
-            <div className='w-full h-auto flex flex-wrap gap-[20px] justify-center'>
-              {updatedItemsList && updatedItemsList.length > 0 ? (
-                updatedItemsList.map((item, index) => (
-                  <FoodCard key={item._id || index} data={item} />
-                ))
-              ) : (
-                <div className="text-center py-10 w-full">
-                  <p className="text-gray-500 text-lg">
-                    {updatedItemsList === undefined ? 'Loading...' :
-                      updatedItemsList?.length === 0 ? `No food items found in ${currentCity}` :
-                        'No items available'}
-                  </p>
-                  <p className="text-gray-400 text-sm mt-2">
-                    Debug: updatedItemsList is {updatedItemsList ? 'defined' : 'undefined'},
-                    length: {updatedItemsList?.length}
-                  </p>
-                </div>
-              )}
-            </div>
-          </div>
-        </>
-      ) : (
-        <div className="w-full max-w-6xl flex flex-col items-center justify-center py-20">
-          <div className="text-center">
-            <div className="text-4xl mb-4">📍</div>
-            <h2 className="text-2xl font-semibold text-gray-700 mb-2">
-              {isAutoDetecting ? "Detecting your location..." : "Please set your location"}
-            </h2>
-            <p className="text-gray-500">
-              {isAutoDetecting
-                ? "We're finding the best shops near you..."
-                : "Set your location to discover amazing food options"}
-            </p>
-          </div>
+          {showRightCateButton && <button className='absolute right-0 top-1/2 -translate-y-1/2 bg-[#0A400C] text-white p-2 rounded-full shadow-lg hover:bg-[#819067] z-10' onClick={() => scrollHandler(cateScrollRef, "right")}><FaCircleChevronRight /></button>}
         </div>
-      )}
+      </div>
+
+      <div className='w-full max-w-6xl flex flex-col gap-5 items-start p-[10px]'>
+        <h1 className='text-gray-800 text-2xl sm:text-3xl'>Best Shop in {currentCity || 'Your Area'}</h1>
+        <div className='w-full relative'>
+          {showLeftShopButton && <button className='absolute left-0 top-1/2 -translate-y-1/2 bg-[#0A400C] text-white p-2 rounded-full shadow-lg hover:bg-[#819067] z-10' onClick={() => scrollHandler(shopScrollRef, "left")}><FaCircleChevronLeft /></button>}
+          <div className='w-full flex overflow-x-auto gap-4 pb-2 ' ref={shopScrollRef}>
+            {shopInMyCity?.map((shop, index) => (
+              <CategoryCard name={shop.name} image={shop.image} key={index} onClick={() => navigate(`/shop/${shop._id}`)} />
+            ))}
+          </div>
+          {showRightShopButton && <button className='absolute right-0 top-1/2 -translate-y-1/2 bg-[#0A400C] text-white p-2 rounded-full shadow-lg hover:bg-[#819067] z-10' onClick={() => scrollHandler(shopScrollRef, "right")}><FaCircleChevronRight /></button>}
+        </div>
+      </div>
+
+      <div className='w-full max-w-6xl flex flex-col gap-5 items-start p-[10px]'>
+        <h1 className='text-gray-800 text-2xl sm:text-3xl'>Suggested Food Items {currentCity ? `in ${currentCity}` : ''}</h1>
+        <div className='w-full h-auto flex flex-wrap gap-[20px] justify-center'>
+          {updatedItemsList && updatedItemsList.length > 0 ? (
+            updatedItemsList.map((item, index) => (
+              <FoodCard key={item._id || index} data={item} />
+            ))
+          ) : (
+            <div className="text-center py-10 w-full">
+              <p className="text-gray-500 text-lg">No food items available</p>
+            </div>
+          )}
+        </div>
+      </div>
     </div>
   )
 }
