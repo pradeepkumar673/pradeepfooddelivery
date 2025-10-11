@@ -63,22 +63,87 @@ useEffect(() => {
   }
 };
   const fetchAllItems = async () => {
+  try {
+    console.log('🟡 Fetching REAL food items from database...');
+    
+    let allItems = [];
+    
+    // METHOD 1: Try to get all shops and extract their items
     try {
-      console.log('🟡 Fetching all items from /api/items/all...');
-      const response = await axios.get(`${serverUrl}/api/items/all`);
-      console.log('🟢 All items response:', response.data);
-
-      if (response.data.success) {
-        dispatch(setItemsInMyCity(response.data.items || []));
-      } else {
-        console.log('🔴 Failed to fetch items:', response.data);
-        dispatch(setItemsInMyCity([]));
+      console.log('🟡 Trying to get shops first...');
+      const shopsResponse = await axios.get(`${serverUrl}/api/shop/all`);
+      console.log('🏪 Shops found:', shopsResponse.data?.length);
+      
+      if (shopsResponse.data && shopsResponse.data.length > 0) {
+        // Extract items from all shops
+        shopsResponse.data.forEach(shop => {
+          if (shop.items && shop.items.length > 0) {
+            // Add shop info to each item
+            const itemsWithShopInfo = shop.items.map(item => ({
+              ...item,
+              shop: {
+                _id: shop._id,
+                name: shop.name,
+                city: shop.city,
+                image: shop.image
+              }
+            }));
+            allItems = [...allItems, ...itemsWithShopInfo];
+          }
+        });
+        console.log('🟢 Items extracted from shops:', allItems.length);
       }
-    } catch (error) {
-      console.error('❌ Error fetching all items:', error);
+    } catch (shopError) {
+      console.log('🔴 Could not fetch shops:', shopError.message);
+    }
+    
+    // METHOD 2: If no items from shops, try direct items endpoint
+    if (allItems.length === 0) {
+      try {
+        console.log('🟡 Trying direct items endpoint...');
+        const itemsResponse = await axios.get(`${serverUrl}/api/items/all`);
+        if (itemsResponse.data && itemsResponse.data.items) {
+          allItems = itemsResponse.data.items;
+          console.log('🟢 Items from direct endpoint:', allItems.length);
+        }
+      } catch (itemError) {
+        console.log('🔴 Direct items endpoint failed');
+      }
+    }
+    
+    // METHOD 3: Last resort - get shops by city and their items
+    if (allItems.length === 0 && currentCity) {
+      try {
+        console.log('🟡 Trying city-specific shops...');
+        const cityShopsResponse = await axios.get(`${serverUrl}/api/shop/city/${currentCity}`);
+        if (cityShopsResponse.data && cityShopsResponse.data.length > 0) {
+          cityShopsResponse.data.forEach(shop => {
+            if (shop.items && shop.items.length > 0) {
+              allItems = [...allItems, ...shop.items];
+            }
+          });
+          console.log('🟢 Items from city shops:', allItems.length);
+        }
+      } catch (cityError) {
+        console.log('🔴 City shops endpoint failed');
+      }
+    }
+    
+    console.log('🟢 FINAL REAL ITEMS FOUND:', allItems.length);
+    
+    if (allItems.length > 0) {
+      dispatch(setItemsInMyCity(allItems));
+    } else {
+      console.log('🔴 NO ITEMS FOUND IN DATABASE');
+      // Show empty state but don't use sample data
       dispatch(setItemsInMyCity([]));
     }
-  };
+    
+  } catch (error) {
+    console.error('❌ Error fetching real items:', error);
+    dispatch(setItemsInMyCity([]));
+  }
+};
 
   const handleFilterByCategory = (category) => {
     if (category == "All") {
