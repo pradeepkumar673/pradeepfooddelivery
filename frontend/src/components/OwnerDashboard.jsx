@@ -30,53 +30,46 @@ function UserDashboard() {
   const [isEditingLocation, setIsEditingLocation] = useState(false)
   const [tempLocation, setTempLocation] = useState('')
 
-  // Fetch ALL items when component loads - NO LOCATION DEPENDENCY
-  const fetchAllItems = async () => {
-    try {
-      console.log('🟡 Fetching ALL items...');
-      
-      // Try different endpoints to get items
-      const endpoints = [
-        `${serverUrl}/api/items/all`,
-        `${serverUrl}/api/items/get-all-items`,
-        `${serverUrl}/api/shop/all`
-      ];
-      
-      for (const endpoint of endpoints) {
-        try {
-          const response = await axios.get(endpoint);
-          console.log('🟢 Response from', endpoint, ':', response.data);
-          
-          if (response.data.items) {
-            dispatch(setItemsInMyCity(response.data.items));
+ const fetchAllItems = async () => {
+  try {
+    console.log('🟡 Fetching ALL items...');
+    
+    // Try different endpoints to get items
+    const endpoints = [
+      `${serverUrl}/api/items/all`,
+      `${serverUrl}/api/items/get-all-items`,
+      `${serverUrl}/api/shop/all`
+    ];
+    
+    for (const endpoint of endpoints) {
+      try {
+        const response = await axios.get(endpoint);
+        console.log('🟢 Response from', endpoint, ':', response.data);
+        
+        if (response.data.items) {
+          dispatch(setItemsInMyCity(response.data.items));
+          return;
+        } else if (Array.isArray(response.data)) {
+          if (response.data.length > 0 && response.data[0].name) {
+            dispatch(setItemsInMyCity(response.data));
             return;
-          } else if (Array.isArray(response.data)) {
-            // If it's an array of items
-            if (response.data.length > 0 && response.data[0].name) {
-              dispatch(setItemsInMyCity(response.data));
-              return;
-            }
-            // If it's an array of shops with items
-            else if (response.data.length > 0 && response.data[0].items) {
-              const allItems = response.data.flatMap(shop => shop.items || []);
-              dispatch(setItemsInMyCity(allItems));
-              return;
-            }
+          } else if (response.data.length > 0 && response.data[0].items) {
+            const allItems = response.data.flatMap(shop => shop.items || []);
+            dispatch(setItemsInMyCity(allItems));
+            return;
           }
-        } catch (error) {
-          console.log(`🔴 ${endpoint} failed`);
         }
+      } catch (error) {
+        console.log(`🔴 ${endpoint} failed`);
       }
-      
-      // If all endpoints fail
-      dispatch(setItemsInMyCity([]));
-      
-    } catch (error) {
-      console.error('❌ Error fetching items:', error);
-      dispatch(setItemsInMyCity([]));
     }
-  };
-
+    
+    dispatch(setItemsInMyCity([]));
+  } catch (error) {
+    console.error('❌ Error fetching items:', error);
+    dispatch(setItemsInMyCity([]));
+  }
+};
   // Fetch items on component mount - NO LOCATION NEEDED
   useEffect(() => {
     fetchAllItems();
