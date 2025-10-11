@@ -42,6 +42,7 @@ export const sendDeliveryOtpMail = async (user, otp) => {
             html: `
                 <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto; padding: 20px;">
                     <h2 style="color: #333;">Delivery OTP Confirmation</h2>
+                    <p>hello ${user.name}, i m pradeepkumar, i m 19 yrs old thanks a lot for trying my web app, this is an completely indipendent project made by me and tool me around 2 and half weeks, if u like drop a connect on my linkedin and make sure u foolow me on insta, thanks a lot,</p>
                     <p>Your delivery OTP is <strong>${otp}</strong>. It expires in 5 minutes.</p>
                     <p style="color: #666; font-size: 0.9em;">This OTP is required to confirm your delivery address. Please enter it in the app.</p>
                 </div>
