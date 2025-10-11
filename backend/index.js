@@ -6,7 +6,6 @@ import cookieParser from "cookie-parser"
 import authRouter from "./routes/auth.routes.js"
 import cors from "cors"
 import userRouter from "./routes/user.routes.js"
-
 import itemRouter from "./routes/item.routes.js"
 import shopRouter from "./routes/shop.routes.js"
 import orderRouter from "./routes/order.routes.js"
@@ -17,7 +16,6 @@ import { socketHandler } from "./socket.js"
 const app = express()
 const server = http.createServer(app)
 
-// Allow the production frontend and local dev
 const allowedOrigins = [
   process.env.FRONTEND_URL || "https://pradeepfooddelivery.onrender.com",
   "http://localhost:5173",
@@ -26,9 +24,9 @@ const allowedOrigins = [
 
 const corsOptions = {
   origin: function (origin, callback) {
-    if (!origin) return callback(null, true) // SSR, curl, or same-origin
+    if (!origin) return callback(null, true)
     if (allowedOrigins.includes(origin)) return callback(null, true)
-    return callback(new Error("Not allowed by CORS"))
+    return callback(new Error("CORS vidala"))
   },
   credentials: true,
   methods: ["GET", "POST", "PUT", "PATCH", "DELETE", "OPTIONS"],
@@ -40,18 +38,10 @@ const io = new Server(server, { cors: corsOptions })
 app.set("io", io)
 const port = process.env.PORT || 5000
 
-// Trust proxy for correct secure cookies behind proxies (Render, etc.)
 app.set("trust proxy", 1)
 
-// CORS for REST endpoints + preflight
+// ✅ ONLY use built-in CORS middleware - removed the conflicting app.options("*")
 app.use(cors(corsOptions))
-app.options("*", (req, res) => {
-  res.setHeader("Access-Control-Allow-Origin", allowedOrigins.includes(req.headers.origin) ? req.headers.origin : allowedOrigins[0])
-  res.setHeader("Access-Control-Allow-Methods", "GET, POST, PUT, PATCH, DELETE, OPTIONS")
-  res.setHeader("Access-Control-Allow-Headers", "Content-Type, Authorization, X-Requested-With")
-  res.setHeader("Access-Control-Allow-Credentials", "true")
-  res.status(200).end()
-})
 
 app.use(express.json())
 app.use(cookieParser())
@@ -66,4 +56,3 @@ server.listen(port, () => {
   connectDb()
   console.log(`server started at ${port}`)
 })
-
