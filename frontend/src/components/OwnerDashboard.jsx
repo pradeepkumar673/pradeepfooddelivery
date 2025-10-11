@@ -48,7 +48,7 @@ function UserDashboard() {
     try {
       const response = await axios.get('https://ipapi.co/json/');
       const { city, country } = response.data;
-
+        
       if (city) {
         dispatch(setCurrentCity(city));
       }
@@ -62,10 +62,11 @@ function UserDashboard() {
       setIsAutoDetecting(false);
     }
   };
+
   const fetchAllItems = async () => {
     try {
       console.log('🟡 Fetching items...');
-
+      
       // Try multiple endpoints
       const endpoints = [
         `${serverUrl}/api/items/get-all-items`,
@@ -73,13 +74,13 @@ function UserDashboard() {
         `${serverUrl}/api/items/get-by-city/${currentCity}`,
         `${serverUrl}/api/shop/all`
       ];
-
+      
       for (const endpoint of endpoints) {
         try {
           console.log(`🟡 Trying: ${endpoint}`);
           const response = await axios.get(endpoint);
           console.log('🟢 Response:', response.data);
-
+          
           // Handle different response formats
           if (response.data.items) {
             dispatch(setItemsInMyCity(response.data.items));
@@ -101,32 +102,15 @@ function UserDashboard() {
           console.log(`🔴 ${endpoint} failed:`, error.message);
         }
       }
-
+      
       // If all endpoints fail
       console.log('❌ All endpoints failed');
       dispatch(setItemsInMyCity([]));
-
+      
     } catch (error) {
       console.error('❌ Error fetching items:', error);
       dispatch(setItemsInMyCity([]));
     }
-
-    try {
-      console.log('🟢 FINAL REAL ITEMS FOUND:', allItems.length);
-
-      if (allItems.length > 0) {
-        dispatch(setItemsInMyCity(allItems));
-      } else {
-        console.log('🔴 NO ITEMS FOUND IN DATABASE');
-        // Show empty state but don't use sample data
-        dispatch(setItemsInMyCity([]));
-      }
-
-    } catch (error) {
-      console.error('❌ Error fetching real items:', error);
-      dispatch(setItemsInMyCity([]));
-    }
-
   };
 
   const handleFilterByCategory = (category) => {
@@ -435,23 +419,21 @@ function UserDashboard() {
               </button>}
             </div>
           </div>
+
           <div className='w-full max-w-6xl flex flex-col gap-5 items-start p-[10px]'>
             <h1 className='text-gray-800 text-2xl sm:text-3xl'>
               Suggested Food Items in {currentCity}
             </h1>
 
-            {/* DEBUG: Add this to see what's happening */}
-            {console.log('DEBUG updatedItemsList:', updatedItemsList)}
-            {console.log('DEBUG itemsInMyCity:', itemsInMyCity)}
-            {/* ADD THIS BUTTON */}
             <div className="w-full max-w-6xl flex justify-center mb-4">
-              <button
+              <button 
                 onClick={fetchAllItems}
                 className="bg-red-500 hover:bg-red-600 text-white px-6 py-2 rounded-lg font-semibold"
               >
                 🔄 DEBUG: Fetch Items
               </button>
             </div>
+
             <div className='w-full h-auto flex flex-wrap gap-[20px] justify-center'>
               {updatedItemsList && updatedItemsList.length > 0 ? (
                 updatedItemsList.map((item, index) => (
@@ -463,10 +445,6 @@ function UserDashboard() {
                     {updatedItemsList === undefined ? 'Loading...' :
                       updatedItemsList?.length === 0 ? `No food items found in ${currentCity}` :
                         'No items available'}
-                  </p>
-                  <p className="text-gray-400 text-sm mt-2">
-                    Debug: updatedItemsList is {updatedItemsList ? 'defined' : 'undefined'},
-                    length: {updatedItemsList?.length}
                   </p>
                 </div>
               )}
@@ -491,4 +469,5 @@ function UserDashboard() {
     </div>
   )
 }
+
 export default UserDashboard
