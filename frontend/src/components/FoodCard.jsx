@@ -7,7 +7,7 @@ function FoodCard({ data }) {
   const [quantity, setQuantity] = useState(0);
   const dispatch = useDispatch();
   
-  // SAFELY get cartItems from Redux
+  // SAFELY get cartItems from Redu
   const cartItems = useSelector(state => state.user?.cartItems || []);
   
   const renderStars = (rating) => {
