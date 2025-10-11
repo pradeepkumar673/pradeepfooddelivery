@@ -45,7 +45,13 @@ app.set("trust proxy", 1)
 
 // CORS for REST endpoints + preflight
 app.use(cors(corsOptions))
-app.options("*", cors(corsOptions))
+app.options("*", (req, res) => {
+  res.setHeader("Access-Control-Allow-Origin", allowedOrigins.includes(req.headers.origin) ? req.headers.origin : allowedOrigins[0])
+  res.setHeader("Access-Control-Allow-Methods", "GET, POST, PUT, PATCH, DELETE, OPTIONS")
+  res.setHeader("Access-Control-Allow-Headers", "Content-Type, Authorization, X-Requested-With")
+  res.setHeader("Access-Control-Allow-Credentials", "true")
+  res.status(200).end()
+})
 
 app.use(express.json())
 app.use(cookieParser())
