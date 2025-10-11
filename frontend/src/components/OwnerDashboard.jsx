@@ -1,163 +1,494 @@
-import React, { useState, useEffect } from 'react'
+import React, { useEffect, useRef, useState } from 'react'
 import Nav from './Nav.jsx'
-import { useSelector } from 'react-redux'
-import { FaUtensils, FaBell } from "react-icons/fa";
+import { categories } from '../category'
+import CategoryCard from './CategoryCard'
+import { FaCircleChevronLeft } from "react-icons/fa6";
+import { FaCircleChevronRight } from "react-icons/fa6";
+import { FaMapMarkerAlt, FaEdit, FaCheck, FaTimes } from "react-icons/fa";
+import { useSelector, useDispatch } from 'react-redux';
+import FoodCard from './FoodCard';
 import { useNavigate } from 'react-router-dom';
-import { FaPen } from "react-icons/fa";
-import OwnerItemCard from './OwnerItemCard.jsx';
-import useGetMyShop from '../hooks/useGetMyShop';
 import axios from 'axios';
 import { serverUrl } from '../App';
-import {
-  BarChart,
-  Bar,
-  XAxis,
-  YAxis,
-  CartesianGrid,
-  Tooltip,
-  ResponsiveContainer,
-  Legend
-} from 'recharts';
-function OwnerDashboard() {
-  const { myShopData } = useSelector(state => state.owner)
+import { setCurrentCity, setItemsInMyCity } from '../redux/userSlice';
+
+function UserDashboard() {
+  const { currentCity, shopInMyCity, itemsInMyCity, searchItems } = useSelector(state => state.user)
+  const dispatch = useDispatch()
+  const cateScrollRef = useRef()
+  const shopScrollRef = useRef()
   const navigate = useNavigate()
-  const getMyShop = useGetMyShop();
-  const [notifying, setNotifying] = useState(false);
-  const [earningsData, setEarningsData] = useState([]);
+  const [showLeftCateButton, setShowLeftCateButton] = useState(false)
+  const [showRightCateButton, setShowRightCateButton] = useState(false)
+  const [showLeftShopButton, setShowLeftShopButton] = useState(false)
+  const [showRightShopButton, setShowRightShopButton] = useState(false)
+  const [updatedItemsList, setUpdatedItemsList] = useState([])
+  const [showLocationModal, setShowLocationModal] = useState(false)
+  const [locationInput, setLocationInput] = useState('')
+  const [isLoading, setIsLoading] = useState(false)
+  const [isAutoDetecting, setIsAutoDetecting] = useState(false)
+  const [isEditingLocation, setIsEditingLocation] = useState(false)
+  const [tempLocation, setTempLocation] = useState('')
 
   useEffect(() => {
-    if (myShopData) {
-      const fetchEarnings = async () => {
-        try {
-          const response = await axios.get(`${serverUrl}/api/shop/daily-earnings?days=7`, { withCredentials: true });
-          setEarningsData(response.data);
-        } catch (error) {
-          console.error('Error fetching earnings:', error);
-        }
-      };
-      fetchEarnings();
+    if (!currentCity) {
+      setShowLocationModal(true);
+      const timer = setTimeout(() => {
+        autoDetectLocation();
+      }, 2000);
+      return () => clearTimeout(timer);
+    } else {
+      console.log('🟡 City is set, fetching all items...');
+      fetchAllItems();
     }
-  }, [myShopData]);
+  }, [currentCity]);
 
-  const handleNotifyUsers = async () => {
-    if (!myShopData) return;
-    setNotifying(true);
+  const autoDetectLocation = async () => {
+    setIsAutoDetecting(true);
     try {
-      const response = await axios.post(`${serverUrl}/api/item/notify-users`, {}, { withCredentials: true });
-      alert(response.data.message);
+      const response = await axios.get('https://ipapi.co/json/');
+      const { city, country } = response.data;
+
+      if (city) {
+        dispatch(setCurrentCity(city));
+      }
+      fetchAllItems();
+      setShowLocationModal(false);
     } catch (error) {
-      console.error('Notification error:', error);
-      alert('Failed to send notification. Please try again.');
+      console.error('Error auto-detecting location:', error);
+      fetchAllItems();
+      setShowLocationModal(false);
     } finally {
-      setNotifying(false);
+      setIsAutoDetecting(false);
     }
   };
+  const fetchAllItems = async () => {
+    try {
+      console.log('🟡 Fetching items...');
 
+      // Try multiple endpoints
+      const endpoints = [
+        `${serverUrl}/api/items/get-all-items`,
+        `${serverUrl}/api/items/all`,
+        `${serverUrl}/api/items/get-by-city/${currentCity}`,
+        `${serverUrl}/api/shop/all`
+      ];
+
+      for (const endpoint of endpoints) {
+        try {
+          console.log(`🟡 Trying: ${endpoint}`);
+          const response = await axios.get(endpoint);
+          console.log('🟢 Response:', response.data);
+
+          // Handle different response formats
+          if (response.data.items) {
+            dispatch(setItemsInMyCity(response.data.items));
+            return;
+          } else if (Array.isArray(response.data)) {
+            // If it's an array of items
+            if (response.data.length > 0 && response.data[0].name) {
+              dispatch(setItemsInMyCity(response.data));
+              return;
+            }
+            // If it's an array of shops with items
+            else if (response.data.length > 0 && response.data[0].items) {
+              const allItems = response.data.flatMap(shop => shop.items || []);
+              dispatch(setItemsInMyCity(allItems));
+              return;
+            }
+          }
+        } catch (error) {
+          console.log(`🔴 ${endpoint} failed:`, error.message);
+        }
+      }
+
+      // If all endpoints fail
+      console.log('❌ All endpoints failed');
+      dispatch(setItemsInMyCity([]));
+
+    } catch (error) {
+      console.error('❌ Error fetching items:', error);
+      dispatch(setItemsInMyCity([]));
+    }
+
+    try {
+      console.log('🟢 FINAL REAL ITEMS FOUND:', allItems.length);
+
+      if (allItems.length > 0) {
+        dispatch(setItemsInMyCity(allItems));
+      } else {
+        console.log('🔴 NO ITEMS FOUND IN DATABASE');
+        // Show empty state but don't use sample data
+        dispatch(setItemsInMyCity([]));
+      }
+
+    } catch (error) {
+      console.error('❌ Error fetching real items:', error);
+      dispatch(setItemsInMyCity([]));
+    }
+
+  };
+
+  const handleFilterByCategory = (category) => {
+    if (category == "All") {
+      setUpdatedItemsList(itemsInMyCity)
+    } else {
+      const filteredList = itemsInMyCity?.filter(i => i.category === category)
+      setUpdatedItemsList(filteredList)
+    }
+  }
+
+  useEffect(() => {
+    console.log('🟡 Setting updatedItemsList from itemsInMyCity:', itemsInMyCity);
+    setUpdatedItemsList(itemsInMyCity);
+
+    if (!itemsInMyCity || itemsInMyCity.length === 0) {
+      console.log('🟡 No items found, fetching all items...');
+      fetchAllItems();
+    }
+  }, [itemsInMyCity]);
+
+  const updateButton = (ref, setLeftButton, setRightButton) => {
+    const element = ref.current
+    if (element) {
+      setLeftButton(element.scrollLeft > 0)
+      setRightButton(element.scrollLeft + element.clientWidth < element.scrollWidth)
+    }
+  }
+
+  const scrollHandler = (ref, direction) => {
+    if (ref.current) {
+      ref.current.scrollBy({
+        left: direction == "left" ? -200 : 200,
+        behavior: "smooth"
+      })
+    }
+  }
+
+  const handleLocationSubmit = async (e) => {
+    e.preventDefault()
+    if (!locationInput.trim()) return
+
+    setIsLoading(true)
+    try {
+      dispatch(setCurrentCity(locationInput.trim()))
+      setShowLocationModal(false)
+      setLocationInput('')
+    } catch (error) {
+      console.error('Error setting location:', error)
+    } finally {
+      setIsLoading(false)
+    }
+  }
+
+  const handleEditLocation = () => {
+    setLocationInput(currentCity || '')
+    setShowLocationModal(true)
+  }
+
+  const handleLocationIconClick = () => {
+    if (!currentCity) {
+      setShowLocationModal(true)
+      return
+    }
+
+    setIsEditingLocation(true)
+    setTempLocation(currentCity)
+  }
+
+  const handleLocationSave = () => {
+    if (tempLocation.trim()) {
+      dispatch(setCurrentCity(tempLocation.trim()))
+    }
+    setIsEditingLocation(false)
+    setTempLocation('')
+  }
+
+  const handleLocationCancel = () => {
+    setIsEditingLocation(false)
+    setTempLocation('')
+  }
+
+  const handleLocationInputChange = (e) => {
+    setTempLocation(e.target.value)
+  }
+
+  const handleUseCurrentLocation = () => {
+    if (navigator.geolocation) {
+      setIsAutoDetecting(true)
+      navigator.geolocation.getCurrentPosition(
+        async (position) => {
+          try {
+            const { latitude, longitude } = position.coords
+            const response = await axios.get(
+              `https://api.bigdatacloud.net/data/reverse-geocode-client?latitude=${latitude}&longitude=${longitude}&localityLanguage=en`
+            )
+            const city = response.data.city
+            if (city) {
+              dispatch(setCurrentCity(city))
+              setShowLocationModal(false)
+              if (isEditingLocation) {
+                setIsEditingLocation(false)
+              }
+            }
+          } catch (error) {
+            console.error('Error getting location from coordinates:', error)
+            autoDetectLocation()
+          } finally {
+            setIsAutoDetecting(false)
+          }
+        },
+        (error) => {
+          console.error('Error getting current location:', error)
+          autoDetectLocation()
+        }
+      )
+    } else {
+      autoDetectLocation()
+    }
+  }
+
+  useEffect(() => {
+    if (cateScrollRef.current) {
+      updateButton(cateScrollRef, setShowLeftCateButton, setShowRightCateButton)
+      updateButton(shopScrollRef, setShowLeftShopButton, setShowRightShopButton)
+      cateScrollRef.current.addEventListener('scroll', () => {
+        updateButton(cateScrollRef, setShowLeftCateButton, setShowRightCateButton)
+      })
+      shopScrollRef.current.addEventListener('scroll', () => {
+        updateButton(shopScrollRef, setShowLeftShopButton, setShowRightShopButton)
+      })
+    }
+
+    return () => {
+      cateScrollRef?.current?.removeEventListener("scroll", () => {
+        updateButton(cateScrollRef, setShowLeftCateButton, setShowRightCateButton)
+      })
+      shopScrollRef?.current?.removeEventListener("scroll", () => {
+        updateButton(shopScrollRef, setShowLeftShopButton, setShowRightShopButton)
+      })
+    }
+  }, [categories])
 
   return (
-    <div className='w-full min-h-screen bg-[#FEFAE0] flex flex-col items-center'>
+    <div className='w-screen min-h-screen flex flex-col gap-5 items-center overflow-y-auto'>
       <Nav />
-      {!myShopData &&
-        <div className='flex justify-center items-center p-4 sm:p-6'>
-          <div className='w-full max-w-md bg-white shadow-lg rounded-2xl p-6 border border-gray-100 hover:shadow-xl transition-shadow duration-300'>
-            <div className='flex flex-col items-center text-center'>
-              <FaUtensils className='text-[#0A400C] w-16 h-16 sm:w-20 sm:h-20 mb-4' />
-              <h2 className='text-xl sm:text-2xl font-bold text-gray-800 mb-2'>Add Your Restaurant</h2>
-              <p className='text-gray-600 mb-4 text-sm sm:text-base'>Join our food delivery platform and reach thousands of hungry customers every day.
-              </p>
-              <button className='bg-[#0A400C] text-white px-5 sm:px-6 py-2 rounded-full font-medium shadow-md hover:bg-[#819067] transition-colors duration-200' onClick={() => navigate("/create-edit-shop")}>
-                Get Started
+      <div className="flex flex-col items-center justify-center h-[80vh]">
+        <video className="w-full h-full object-cover shadow-lg" controls autoPlay muted loop>
+          <source src="/assets/video.mp4" type="video/mp4" />
+          Your browser does not support the video tag.
+        </video>
+      </div>
+
+      <div className="w-full max-w-6xl flex justify-between items-center p-4">
+        <div></div>
+
+        <div className="flex items-center gap-3">
+          {isEditingLocation ? (
+            <div className="flex items-center gap-2 bg-white border border-[#B1AB86] rounded-full px-4 py-2 shadow-md">
+              <FaMapMarkerAlt className="text-[#0A400C]" />
+              <input
+                type="text"
+                value={tempLocation}
+                onChange={handleLocationInputChange}
+                className="outline-none bg-transparent text-gray-700 min-w-[120px]"
+                placeholder="Enter city"
+                autoFocus
+              />
+              <div className="flex gap-1">
+                <button
+                  onClick={handleLocationSave}
+                  className="text-green-500 hover:text-green-600 p-1"
+                  disabled={!tempLocation.trim()}
+                >
+                  <FaCheck />
+                </button>
+                <button
+                  onClick={handleLocationCancel}
+                  className="text-red-500 hover:text-red-600 p-1"
+                >
+                  <FaTimes />
+                </button>
+              </div>
+            </div>
+          ) : (
+            <button
+              onClick={handleLocationIconClick}
+              className="flex items-center gap-2 bg-white text-gray-700 px-4 py-2 rounded-full shadow-md hover:shadow-lg transition-shadow group"
+            >
+              <div className="relative">
+                <FaMapMarkerAlt className="text-[#0A400C] group-hover:scale-110 transition-transform" />
+                <FaEdit className="absolute -top-1 -right-1 text-xs text-blue-500 opacity-0 group-hover:opacity-100 transition-opacity" />
+              </div>
+              <span className="font-medium">{currentCity || 'Set Location'}</span>
+              <span className="text-blue-500 text-sm opacity-0 group-hover:opacity-100 transition-opacity">
+                Edit
+              </span>
+            </button>
+          )}
+        </div>
+      </div>
+
+      {showLocationModal && (
+        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
+          <div className="bg-white rounded-2xl p-6 max-w-md w-full mx-4">
+            <div className="flex items-center gap-3 mb-4">
+              <FaMapMarkerAlt className="text-[#0A400C] text-2xl" />
+              <h2 className="text-2xl font-bold">Set Your Location</h2>
+            </div>
+
+            <p className="text-gray-600 mb-6">
+              {isAutoDetecting
+                ? "Detecting your location..."
+                : "Please set your location to see relevant shops and food items"}
+            </p>
+
+            <form onSubmit={handleLocationSubmit} className="mb-4">
+              <div className="relative">
+                <input
+                  type="text"
+                  value={locationInput}
+                  onChange={(e) => setLocationInput(e.target.value)}
+                  placeholder="Enter your city"
+                  className="w-full p-3 border border-gray-300 rounded-lg mb-3 pl-10"
+                  disabled={isAutoDetecting}
+                />
+                <FaMapMarkerAlt className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400" />
+              </div>
+              <button
+                type="submit"
+                disabled={!locationInput.trim() || isLoading}
+                className="w-full bg-[#0A400C] text-white p-3 rounded-lg hover:bg-[#819067] disabled:bg-gray-300 transition-colors"
+              >
+                {isLoading ? 'Setting Location...' : 'Set Location'}
               </button>
+            </form>
+
+            <div className="flex gap-3">
+              <button
+                onClick={handleUseCurrentLocation}
+                disabled={isAutoDetecting}
+                className="flex-1 bg-blue-500 text-white p-3 rounded-lg hover:bg-blue-600 disabled:bg-gray-300 transition-colors flex items-center justify-center gap-2"
+              >
+                <FaMapMarkerAlt />
+                {isAutoDetecting ? 'Detecting...' : 'Current Location'}
+              </button>
+
+              {isAutoDetecting && (
+                <button
+                  onClick={() => setIsAutoDetecting(false)}
+                  className="flex-1 bg-gray-500 text-white p-3 rounded-lg hover:bg-gray-600 transition-colors"
+                >
+                  Cancel
+                </button>
+              )}
             </div>
           </div>
         </div>
-      }
+      )}
 
-      {myShopData &&
-        <div className='w-full flex flex-col items-center gap-6 px-4 sm:px-6'>
-          <h1 className='text-2xl sm:text-3xl text-gray-900 flex items-center gap-3 mt-8 text-center'><FaUtensils className='text-[#0A400C] w-14 h-14 ' />Welcome to {myShopData.name}</h1>
+      {searchItems && searchItems.length > 0 && (
+        <div className='w-full max-w-6xl flex flex-col gap-5 items-start p-5 bg-white shadow-md rounded-2xl mt-4'>
+          <h1 className='text-gray-900 text-2xl sm:text-3xl font-semibold border-b border-gray-200 pb-2'>
+            Search Results
+          </h1>
+          <div className='w-full h-auto flex flex-wrap gap-6 justify-center'>
+            {searchItems.map((item) => (
+              <FoodCard data={item} key={item._id} />
+            ))}
+          </div>
+        </div>
+      )}
 
-          <div className='bg-white shadow-lg rounded-xl overflow-hidden border border-[#B1AB86] hover:shadow-2xl transition-all duration-300 w-full max-w-3xl relative'>
-            <div className='absolute top-4 right-4 bg-[#0A400C] text-white p-2 rounded-full shadow-md hover:bg-[#819067] transition-colors cursor-pointer' onClick={() => navigate("/create-edit-shop")}>
-              <FaPen size={20} />
-            </div>
-            <img src={myShopData.image} alt={myShopData.name} className='w-full h-48 sm:h-64 object-cover' />
-            <div className='p-4 sm:p-6'>
-              <h1 className='text-xl sm:text-2xl font-bold text-gray-800 mb-2'>{myShopData.name}</h1>
-              <p className='text-gray-500 '>{myShopData.city},{myShopData.state}</p>
-              <p className='text-gray-500 mb-4'>{myShopData.address}</p>
-              <button
-                onClick={handleNotifyUsers}
-                disabled={notifying || !myShopData}
-                className='flex items-center gap-2 bg-[#0A400C] text-white px-4 py-2 rounded-full font-medium shadow-md hover:bg-[#819067] transition-colors duration-200 disabled:opacity-50 disabled:cursor-not-allowed'
-              >
-                <FaBell size={16} />
-                {notifying ? 'Notifying...' : 'Notify Users in City'}
-              </button>
+      {currentCity ? (
+        <>
+          <div className="w-full max-w-6xl flex flex-col gap-5 items-start p-[10px]">
+            <h1 className='text-gray-800 text-2xl sm:text-3xl'>Inspiration for your first order</h1>
+            <div className='w-full relative'>
+              {showLeftCateButton && <button className='absolute left-0 top-1/2 -translate-y-1/2 bg-[#0A400C] text-white p-2 rounded-full shadow-lg hover:bg-[#819067] z-10' onClick={() => scrollHandler(cateScrollRef, "left")}><FaCircleChevronLeft />
+              </button>}
+
+              <div className='w-full flex overflow-x-auto gap-4 pb-2 ' ref={cateScrollRef}>
+                {categories.map((cate, index) => (
+                  <CategoryCard name={cate.category} image={cate.image} key={index} onClick={() => handleFilterByCategory(cate.category)} />
+                ))}
+              </div>
+              {showRightCateButton && <button className='absolute right-0 top-1/2 -translate-y-1/2 bg-[#0A400C] text-white p-2 rounded-full shadow-lg hover:bg-[#819067] z-10' onClick={() => scrollHandler(cateScrollRef, "right")}>
+                <FaCircleChevronRight />
+              </button>}
             </div>
           </div>
 
-          {/* Daily Earnings Graph */}
-          {myShopData && (
-            <div className='w-full max-w-4xl bg-white shadow-lg rounded-xl p-6 border border-[#B1AB86] hover:shadow-2xl transition-all duration-300'>
-              <h2 className='text-xl font-bold text-gray-800 mb-4 flex items-center gap-2'>
-                <FaUtensils className='text-[#0A400C]' />
-                Weekly Earnings Overview
-              </h2>
-              <ResponsiveContainer width="100%" height={300}>
-                <BarChart data={earningsData} margin={{ top: 20, right: 30, left: 20, bottom: 5 }}>
-                  <CartesianGrid strokeDasharray="3 3" stroke="#f0f0f0" />
-                  <XAxis dataKey="date" stroke="#0A400C" fontSize={12} />
-                  <YAxis stroke="#0A400C" fontSize={12} />
-                  <Tooltip
-                    contentStyle={{
-                      backgroundColor: '#FEFAE0',
-                      border: '1px solid #0A400C',
-                      borderRadius: '8px'
-                    }}
-                    labelStyle={{ color: '#0A400C' }}
-                    formatter={(value) => [`₹${value.toLocaleString()}`, 'Earnings']}
-                  />
-                  <Legend />
-                  <Bar
-                    dataKey="earnings"
-                    fill="#0A400C"
-                    radius={[4, 4, 0, 0]}
-                    background={{ fill: '#FEFAE0' }}
-                  />
-                </BarChart>
-              </ResponsiveContainer>
-            </div>
-          )}
+          <div className='w-full max-w-6xl flex flex-col gap-5 items-start p-[10px]'>
+            <h1 className='text-gray-800 text-2xl sm:text-3xl'>Best Shop in {currentCity}</h1>
+            <div className='w-full relative'>
+              {showLeftShopButton && <button className='absolute left-0 top-1/2 -translate-y-1/2 bg-[#0A400C] text-white p-2 rounded-full shadow-lg hover:bg-[#819067] z-10' onClick={() => scrollHandler(shopScrollRef, "left")}><FaCircleChevronLeft />
+              </button>}
 
-          {myShopData.items.length == 0 &&
-            <div className='flex justify-center items-center p-4 sm:p-6'>
-              <div className='w-full max-w-md bg-white shadow-lg rounded-2xl p-6 border border-gray-100 hover:shadow-xl transition-shadow duration-300'>
-                <div className='flex flex-col items-center text-center'>
-                  <FaUtensils className='text-[#0A400C] w-16 h-16 sm:w-20 sm:h-20 mb-4' />
-                  <h2 className='text-xl sm:text-2xl font-bold text-gray-800 mb-2'>Add Your Food Item</h2>
-                  <p className='text-gray-600 mb-4 text-sm sm:text-base'>Share your delicious creations with our customers by adding them to the menu.
-                  </p>
-                  <button className='bg-[#0A400C] text-white px-5 sm:px-6 py-2 rounded-full font-medium shadow-md hover:bg-[#819067] transition-colors duration-200' onClick={() => navigate("/add-item")}>
-                    Add Food
-                  </button>
-                </div>
+              <div className='w-full flex overflow-x-auto gap-4 pb-2 ' ref={shopScrollRef}>
+                {shopInMyCity?.map((shop, index) => (
+                  <CategoryCard name={shop.name} image={shop.image} key={index} onClick={() => navigate(`/shop/${shop._id}`)} />
+                ))}
               </div>
+              {showRightShopButton && <button className='absolute right-0 top-1/2 -translate-y-1/2 bg-[#0A400C] text-white p-2 rounded-full shadow-lg hover:bg-[#819067] z-10' onClick={() => scrollHandler(shopScrollRef, "right")}>
+                <FaCircleChevronRight />
+              </button>}
             </div>
-          }
+          </div>
+          <div className='w-full max-w-6xl flex flex-col gap-5 items-start p-[10px]'>
+            <h1 className='text-gray-800 text-2xl sm:text-3xl'>
+              Suggested Food Items in {currentCity}
+            </h1>
 
-          {myShopData.items.length > 0 && <div className='flex flex-col items-center gap-4 w-full max-w-3xl '>
-            {myShopData.items.map((item, index) => (
-              <OwnerItemCard data={item} key={index} />
-            ))}
-          </div>}
-
-        </div>}
-
-
-
+            {/* DEBUG: Add this to see what's happening */}
+            {console.log('DEBUG updatedItemsList:', updatedItemsList)}
+            {console.log('DEBUG itemsInMyCity:', itemsInMyCity)}
+            {/* ADD THIS BUTTON */}
+            <div className="w-full max-w-6xl flex justify-center mb-4">
+              <button
+                onClick={fetchAllItems}
+                className="bg-red-500 hover:bg-red-600 text-white px-6 py-2 rounded-lg font-semibold"
+              >
+                🔄 DEBUG: Fetch Items
+              </button>
+            </div>
+            <div className='w-full h-auto flex flex-wrap gap-[20px] justify-center'>
+              {updatedItemsList && updatedItemsList.length > 0 ? (
+                updatedItemsList.map((item, index) => (
+                  <FoodCard key={item._id || index} data={item} />
+                ))
+              ) : (
+                <div className="text-center py-10 w-full">
+                  <p className="text-gray-500 text-lg">
+                    {updatedItemsList === undefined ? 'Loading...' :
+                      updatedItemsList?.length === 0 ? `No food items found in ${currentCity}` :
+                        'No items available'}
+                  </p>
+                  <p className="text-gray-400 text-sm mt-2">
+                    Debug: updatedItemsList is {updatedItemsList ? 'defined' : 'undefined'},
+                    length: {updatedItemsList?.length}
+                  </p>
+                </div>
+              )}
+            </div>
+          </div>
+        </>
+      ) : (
+        <div className="w-full max-w-6xl flex flex-col items-center justify-center py-20">
+          <div className="text-center">
+            <div className="text-4xl mb-4">📍</div>
+            <h2 className="text-2xl font-semibold text-gray-700 mb-2">
+              {isAutoDetecting ? "Detecting your location..." : "Please set your location"}
+            </h2>
+            <p className="text-gray-500">
+              {isAutoDetecting
+                ? "We're finding the best shops near you..."
+                : "Set your location to discover amazing food options"}
+            </p>
+          </div>
+        </div>
+      )}
     </div>
   )
 }
-
-export default OwnerDashboard
+export default UserDashboard
